@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{A1B2C3D4-0005-4000-9000-000000000005}</ProjectGuid>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>ExpenseFlow.Worker</RootNamespace>
+    <AssemblyName>ExpenseFlow.Worker</AssemblyName>
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <Deterministic>true</Deterministic>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="EntityFramework">
+      <HintPath>..\..\packages\EntityFramework.6.4.4\lib\net45\EntityFramework.dll</HintPath>
+    </Reference>
+    <Reference Include="EntityFramework.SqlServer">
+      <HintPath>..\..\packages\EntityFramework.6.4.4\lib\net45\EntityFramework.SqlServer.dll</HintPath>
+    </Reference>
+    <Reference Include="log4net">
+      <HintPath>..\..\packages\log4net.2.0.15\lib\net45\log4net.dll</HintPath>
+    </Reference>
+    <Reference Include="Newtonsoft.Json">
+      <HintPath>..\..\packages\Newtonsoft.Json.13.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
+    </Reference>
+    <Reference Include="PdfSharp">
+      <HintPath>..\..\packages\PdfSharp.1.50.5147\lib\net20\PdfSharp.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Configuration" />
+    <Reference Include="System.Configuration.Install" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Data" />
+    <!-- Windows-only API #1: GDI+ image processing. -->
+    <Reference Include="System.Drawing" />
+    <!-- Windows-only API #2: MSMQ, via ExpenseFlow.Messaging. -->
+    <Reference Include="System.Messaging" />
+    <Reference Include="System.Net.Http" />
+    <!-- Windows-only API #3: the Windows Service host itself. -->
+    <Reference Include="System.ServiceProcess" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Handlers\ClaimPdfWriter.cs" />
+    <Compile Include="Handlers\EmailSender.cs" />
+    <Compile Include="Handlers\NotificationPusher.cs" />
+    <Compile Include="Handlers\ThumbnailRenderer.cs" />
+    <Compile Include="Program.cs" />
+    <Compile Include="WorkerConfig.cs" />
+    <Compile Include="WorkerLoop.cs" />
+    <Compile Include="WorkerService.cs" />
+    <Compile Include="WorkerServiceInstaller.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="App.config" />
+    <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\ExpenseFlow.Domain\ExpenseFlow.Domain.csproj">
+      <Project>{A1B2C3D4-0001-4000-9000-000000000001}</Project>
+      <Name>ExpenseFlow.Domain</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\ExpenseFlow.Data\ExpenseFlow.Data.csproj">
+      <Project>{A1B2C3D4-0002-4000-9000-000000000002}</Project>
+      <Name>ExpenseFlow.Data</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\ExpenseFlow.Messaging\ExpenseFlow.Messaging.csproj">
+      <Project>{A1B2C3D4-0003-4000-9000-000000000003}</Project>
+      <Name>ExpenseFlow.Messaging</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+</Project>

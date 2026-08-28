@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewBag.Title - ExpenseFlow</title>
+    @Styles.Render("~/Content/css")
+</head>
+<body>
+    <header class="topbar">
+        <div class="brand">ExpenseFlow</div>
+        @if (CurrentUser.IsAuthenticated)
+        {
+            <nav>
+                <a href="@Url.Action("Index", "Home")">Dashboard</a>
+                <a href="@Url.Action("Index", "Claims")">My claims</a>
+                @if (CurrentUser.CanApprove)
+                {
+                    <a href="@Url.Action("Index", "Approvals")">Approvals</a>
+                }
+                @if (CurrentUser.IsAdmin)
+                {
+                    <a href="@Url.Action("Reports", "Admin")">Reports</a>
+                }
+            </nav>
+            <div class="who">
+                <span>@CurrentUser.Email</span>
+                @using (Html.BeginForm("Logout", "Account", FormMethod.Post))
+                {
+                    @Html.AntiForgeryToken()
+                    <button type="submit">Sign out</button>
+                }
+            </div>
+        }
+    </header>
+
+    <main>
+        @if (TempData["Success"] != null)
+        {
+            <div class="alert success">@TempData["Success"]</div>
+        }
+        @if (TempData["Warning"] != null)
+        {
+            <div class="alert warn">@TempData["Warning"]</div>
+        }
+        @if (TempData["Error"] != null)
+        {
+            <div class="alert error">@TempData["Error"]</div>
+        }
+
+        @RenderBody()
+    </main>
+
+    <div id="toasts"></div>
+
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/signalr.js/2.4.3/jquery.signalR.min.js"></script>
+    <script src="@Url.Content("~/signalr/hubs")"></script>
+    <script>
+        // SignalR 2.x client. The generated /signalr/hubs proxy plus a
+        // jQuery-hosted $.connection object - both of which disappear in
+        // ASP.NET Core SignalR, where you use @@microsoft/signalr instead.
+        (function () {
+            if (!window.jQuery || !window.jQuery.connection || !jQuery.connection.notifications) {
+                return; // CDN unavailable - the app still works, just no live toasts.
+            }
+
+            function toast(title, message, level) {
+                var cls = level === 'success' ? 'ok' : (level === 'error' ? 'bad' : '');
+                var el = jQuery('<div class="toast ' + cls + '"><div class="t"></div><div class="m"></div></div>');
+                el.find('.t').text(title || 'Notification');
+                el.find('.m').text(message || '');
+                jQuery('#toasts').append(el);
+                setTimeout(function () { el.fadeOut(400, function () { el.remove(); }); }, 9000);
+            }
+
+            var hub = jQuery.connection.notifications;
+            hub.client.notify = function (payload) {
+                toast(payload.title, payload.message, payload.level);
+            };
+
+            jQuery.connection.hub.start().fail(function (err) {
+                if (window.console) console.warn('SignalR could not connect:', err);
+            });
+        })();
+    </script>
+</body>
+</html>

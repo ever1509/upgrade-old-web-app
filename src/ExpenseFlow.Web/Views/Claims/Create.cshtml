@@ -1,0 +1,34 @@
+@model ExpenseFlow.Web.Models.CreateClaimViewModel
+@{
+    ViewBag.Title = "New claim";
+}
+<h1>New claim</h1>
+<p class="lede">Create the claim first, then add expense lines and receipts to it.</p>
+
+<div class="panel" style="max-width:560px">
+    @using (Html.BeginForm("Create", "Claims", FormMethod.Post))
+    {
+        @Html.AntiForgeryToken()
+        @Html.ValidationSummary(false)
+
+        <div class="field">
+            @Html.LabelFor(m => m.Title)
+            @Html.TextBoxFor(m => m.Title, new { placeholder = "e.g. Client workshop - Berlin" })
+            @Html.ValidationMessageFor(m => m.Title)
+        </div>
+
+        <div class="field">
+            @Html.LabelFor(m => m.ProjectId)
+            <select id="ProjectId" name="ProjectId">
+                <option value="">(no project)</option>
+                @foreach (var p in Model.Projects)
+                {
+                    <option value="@p.Id">@p.DisplayName</option>
+                }
+            </select>
+        </div>
+
+        <button type="submit">Create claim</button>
+        <a class="btn secondary" href="@Url.Action("Index", "Claims")">Cancel</a>
+    }
+</div>
