@@ -1,0 +1,72 @@
+@model ExpenseFlow.Web.Models.ReportsViewModel
+@{
+    ViewBag.Title = "Reports";
+}
+<h1>Spend reports</h1>
+<p class="lede">
+    Served by the stored procedures <code>usp_SpendByDepartment</code> and
+    <code>usp_SpendByCategory</code>, called through EF6 <code>SqlQuery&lt;T&gt;</code>.
+</p>
+
+<div class="panel">
+    <form method="get" action="@Url.Action("Reports", "Admin")">
+        <div class="row">
+            <div>
+                <label for="from">From (UTC)</label>
+                <input type="date" id="from" name="from" value="@Model.FromUtc.ToString("yyyy-MM-dd")" />
+            </div>
+            <div>
+                <label for="to">To (UTC)</label>
+                <input type="date" id="to" name="to" value="@Model.ToUtc.ToString("yyyy-MM-dd")" />
+            </div>
+            <div><button type="submit">Run report</button></div>
+        </div>
+    </form>
+</div>
+
+<h2>By department</h2>
+<div class="table-wrap">
+    <table>
+        <thead>
+            <tr><th>Department</th><th class="num">Claims</th><th class="num">Total</th><th class="num">Average</th></tr>
+        </thead>
+        <tbody>
+            @if (!Model.ByDepartment.Any())
+            {
+                <tr><td colspan="4" class="muted small">No approved claims in this period.</td></tr>
+            }
+            @foreach (var row in Model.ByDepartment)
+            {
+                <tr>
+                    <td>@row.Department</td>
+                    <td class="num">@row.ClaimCount</td>
+                    <td class="num">@row.TotalAmount.ToString("N2")</td>
+                    <td class="num">@row.AverageAmount.ToString("N2")</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+<h2>By category</h2>
+<div class="table-wrap">
+    <table>
+        <thead>
+            <tr><th>Category</th><th class="num">Lines</th><th class="num">Total</th></tr>
+        </thead>
+        <tbody>
+            @if (!Model.ByCategory.Any())
+            {
+                <tr><td colspan="3" class="muted small">No approved claims in this period.</td></tr>
+            }
+            @foreach (var row in Model.ByCategory)
+            {
+                <tr>
+                    <td>@row.Category</td>
+                    <td class="num">@row.LineCount</td>
+                    <td class="num">@row.TotalAmount.ToString("N2")</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

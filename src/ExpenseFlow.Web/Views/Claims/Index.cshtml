@@ -1,0 +1,50 @@
+@model ExpenseFlow.Web.Models.ClaimListViewModel
+@{
+    ViewBag.Title = Model.Heading;
+}
+<h1>@Model.Heading</h1>
+<p class="lede">@Model.Claims.Count claim(s).</p>
+
+<p><a class="btn" href="@Url.Action("Create", "Claims")">Start a new claim</a></p>
+
+@if (!Model.Claims.Any())
+{
+    <div class="panel"><p class="muted" style="margin:0">Nothing here yet.</p></div>
+}
+else
+{
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>Claim</th>
+                    <th>Title</th>
+                    @if (Model.ShowClaimant) { <th>Claimant</th> }
+                    <th>Project</th>
+                    <th>Status</th>
+                    <th class="num">Total</th>
+                    <th>Submitted</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var claim in Model.Claims)
+                {
+                    <tr>
+                        <td><a href="@Url.Action("Details", "Claims", new { id = claim.Id })">@claim.ClaimNumber</a></td>
+                        <td>@claim.Title</td>
+                        @if (Model.ShowClaimant)
+                        {
+                            <td>@(claim.Employee == null ? "" : claim.Employee.FullName)</td>
+                        }
+                        <td class="small muted">@(claim.Project == null ? "-" : claim.Project.Code)</td>
+                        <td><span class="badge @claim.Status.ToLower()">@claim.Status</span></td>
+                        <td class="num">@claim.TotalAmount.ToString("N2")</td>
+                        <td class="small muted">@(claim.SubmittedUtc.HasValue ? claim.SubmittedUtc.Value.ToString("yyyy-MM-dd HH:mm") : "-")</td>
+                        <td class="right"><a class="small" href="@Url.Action("Details", "Claims", new { id = claim.Id })">Open</a></td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}

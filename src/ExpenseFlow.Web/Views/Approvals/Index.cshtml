@@ -1,0 +1,38 @@
+@model ExpenseFlow.Web.Models.ClaimListViewModel
+@{
+    ViewBag.Title = "Approvals";
+}
+<h1>@Model.Heading</h1>
+<p class="lede">@Model.Claims.Count claim(s) waiting. Open one to approve or reject it.</p>
+
+@if (!Model.Claims.Any())
+{
+    <div class="panel"><p class="muted" style="margin:0">Nothing is waiting for you right now.</p></div>
+}
+else
+{
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>Claim</th><th>Claimant</th><th>Title</th>
+                    <th>Project</th><th class="num">Total</th><th>Submitted</th><th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var claim in Model.Claims)
+                {
+                    <tr>
+                        <td><a href="@Url.Action("Details", "Claims", new { id = claim.Id })">@claim.ClaimNumber</a></td>
+                        <td>@(claim.Employee == null ? "" : claim.Employee.FullName)</td>
+                        <td>@claim.Title</td>
+                        <td class="small muted">@(claim.Project == null ? "-" : claim.Project.Code)</td>
+                        <td class="num">@claim.TotalAmount.ToString("N2")</td>
+                        <td class="small muted">@(claim.SubmittedUtc.HasValue ? claim.SubmittedUtc.Value.ToString("yyyy-MM-dd HH:mm") : "-")</td>
+                        <td class="right"><a class="small" href="@Url.Action("Details", "Claims", new { id = claim.Id })">Review</a></td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}

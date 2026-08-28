@@ -1,0 +1,47 @@
+@model ExpenseFlow.Web.Models.LoginViewModel
+@{
+    ViewBag.Title = "Sign in";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<div class="login-shell">
+    <div class="panel">
+        <h1>Sign in to ExpenseFlow</h1>
+        <p class="lede small">Expense claims and approvals.</p>
+
+        @using (Html.BeginForm("Login", "Account", FormMethod.Post))
+        {
+            @Html.AntiForgeryToken()
+            @Html.HiddenFor(m => m.ReturnUrl)
+            @Html.ValidationSummary(false)
+
+            <div class="field">
+                @Html.LabelFor(m => m.Email)
+                @Html.TextBoxFor(m => m.Email, new { type = "email", autofocus = "autofocus" })
+                @Html.ValidationMessageFor(m => m.Email)
+            </div>
+
+            <div class="field">
+                @Html.LabelFor(m => m.Password)
+                @Html.PasswordFor(m => m.Password)
+                @Html.ValidationMessageFor(m => m.Password)
+            </div>
+
+            <div class="field">
+                <label style="font-weight:400">
+                    @Html.CheckBoxFor(m => m.RememberMe) Keep me signed in
+                </label>
+            </div>
+
+            <button type="submit" style="width:100%">Sign in</button>
+        }
+
+        <div class="demo-users">
+            <strong>Seeded accounts</strong> &mdash; password <code>Passw0rd!</code> for all
+            <ul style="padding-left:18px;margin:8px 0 0">
+                <li><code>alice@@expenseflow.local</code> &mdash; Employee</li>
+                <li><code>bob@@expenseflow.local</code> &mdash; Approver (Alice's manager)</li>
+                <li><code>dana@@expenseflow.local</code> &mdash; Admin / Finance</li>
+            </ul>
+        </div>
+    </div>
+</div>

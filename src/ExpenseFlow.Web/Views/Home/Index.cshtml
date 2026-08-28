@@ -1,0 +1,37 @@
+@{
+    ViewBag.Title = "Dashboard";
+}
+<h1>Dashboard</h1>
+<p class="lede">Signed in as @CurrentUser.Email</p>
+
+<div class="cards">
+    <div class="card"><div class="value">@ViewBag.DraftCount</div><div class="label">Draft</div></div>
+    <div class="card"><div class="value">@ViewBag.SubmittedCount</div><div class="label">Awaiting decision</div></div>
+    <div class="card"><div class="value">@ViewBag.ApprovedCount</div><div class="label">Approved</div></div>
+    <div class="card"><div class="value">@ViewBag.RejectedCount</div><div class="label">Rejected</div></div>
+    <div class="card"><div class="value">@(((decimal)ViewBag.TotalApproved).ToString("N2"))</div><div class="label">Approved total (USD)</div></div>
+</div>
+
+@if (CurrentUser.CanApprove && ViewBag.AwaitingMyDecision > 0)
+{
+    <div class="alert warn">
+        <strong>@ViewBag.AwaitingMyDecision</strong> claim(s) are waiting for your decision.
+        <a href="@Url.Action("Index", "Approvals")">Review them now</a>.
+    </div>
+}
+
+<div class="panel">
+    <h3>Quick actions</h3>
+    <a class="btn" href="@Url.Action("Create", "Claims")">Start a new claim</a>
+    <a class="btn secondary" href="@Url.Action("Index", "Claims")">View my claims</a>
+</div>
+
+<div class="panel">
+    <h3>Web API 2 endpoint</h3>
+    <p class="small muted">
+        This app also exposes a parallel Web API 2 stack. Try
+        <a href="@Url.Content("~/api/claims/summary")" target="_blank">/api/claims/summary</a>
+        or <a href="@Url.Content("~/api/claims/mine")" target="_blank">/api/claims/mine</a>
+        &mdash; both authenticate off the same Forms cookie.
+    </p>
+</div>

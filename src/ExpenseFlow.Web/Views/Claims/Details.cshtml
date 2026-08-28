@@ -1,0 +1,185 @@
+@model ExpenseFlow.Web.Models.ClaimDetailsViewModel
+@{
+    ViewBag.Title = Model.Claim.ClaimNumber;
+    var claim = Model.Claim;
+}
+<h1>@claim.ClaimNumber &mdash; @claim.Title</h1>
+<p class="lede">
+    <span class="badge @claim.Status.ToLower()">@claim.Status</span>
+    &nbsp;&middot;&nbsp; @(claim.Employee == null ? "" : claim.Employee.FullName)
+    &nbsp;&middot;&nbsp; @(claim.Project == null ? "no project" : claim.Project.DisplayName)
+    &nbsp;&middot;&nbsp; total <strong>@claim.TotalAmount.ToString("N2")</strong> USD
+</p>
+
+@if (!string.IsNullOrEmpty(claim.RejectionReason))
+{
+    <div class="alert error"><strong>Rejected:</strong> @claim.RejectionReason</div>
+}
+
+<div class="panel">
+    <h3>Expense lines</h3>
+    @if (!claim.Lines.Any())
+    {
+        <p class="muted small" style="margin:0 0 14px">No lines yet. Add the first one below.</p>
+    }
+    else
+    {
+        <div class="table-wrap" style="margin-bottom:16px">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Date</th><th>Category</th><th>Description</th>
+                        <th class="num">Amount</th><th>Receipts</th><th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var line in claim.Lines.OrderBy(l => l.ExpenseDate))
+                    {
+                        <tr>
+                            <td class="small">@line.ExpenseDate.ToString("yyyy-MM-dd")</td>
+                            <td class="small">@(line.Category == null ? "" : line.Category.Name)</td>
+                            <td>@line.Description</td>
+                            <td class="num">@line.Amount.ToString("N2")</td>
+                            <td>
+                                @foreach (var receipt in line.Receipts)
+                                {
+                                    <a class="receipt-chip" target="_blank" href="@Url.Action("Receipt", "Claims", new { id = receipt.Id })">
+                                        @receipt.FileName
+                                    </a>
+                                }
+                                @if (Model.CanEdit)
+                                {
+                                    using (Html.BeginForm("UploadReceipt", "Claims", FormMethod.Post, new { enctype = "multipart/form-data", @class = "inline" }))
+                                    {
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="lineId" value="@line.Id" />
+                                        <input type="file" name="file" style="width:auto;font-size:12px;padding:2px;border:0" />
+                                        <button type="submit" class="secondary" style="padding:3px 9px;font-size:12px">Attach</button>
+                                    }
+                                }
+                            </td>
+                            <td class="right">
+                                @if (Model.CanEdit)
+                                {
+                                    using (Html.BeginForm("RemoveLine", "Claims", FormMethod.Post, new { @class = "inline" }))
+                                    {
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="lineId" value="@line.Id" />
+                                        <button type="submit" class="link">Remove</button>
+                                    }
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+
+    @if (Model.CanEdit)
+    {
+        using (Html.BeginForm("AddLine", "Claims", FormMethod.Post))
+        {
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="ClaimId" value="@claim.Id" />
+            <div class="row">
+                <div>
+                    <label for="CategoryId">Category</label>
+                    <select id="CategoryId" name="CategoryId">
+                        @foreach (var c in Model.Categories)
+                        {
+                            <option value="@c.Id">@c.Name</option>
+                        }
+                    </select>
+                </div>
+                <div>
+                    <label for="ExpenseDate">Date</label>
+                    <input type="date" id="ExpenseDate" name="ExpenseDate" value="@DateTime.UtcNow.ToString("yyyy-MM-dd")" />
+                </div>
+                <div>
+                    <label for="Description">Description</label>
+                    <input type="text" id="Description" name="Description" placeholder="What was it for?" />
+                </div>
+                <div>
+                    <label for="Amount">Amount (USD)</label>
+                    <input type="number" step="0.01" min="0.01" id="Amount" name="Amount" />
+                </div>
+                <div><button type="submit">Add line</button></div>
+            </div>
+        }
+    }
+</div>
+
+<div class="panel">
+    <h3>Actions</h3>
+
+    @if (!Model.CanSubmit && claim.IsEditable && Model.BlockingReasons.Any())
+    {
+        <div class="alert warn">
+            This claim cannot be submitted yet:
+            <ul>
+                @foreach (var reason in Model.BlockingReasons)
+                {
+                    <li>@reason</li>
+                }
+            </ul>
+        </div>
+    }
+
+    <div class="stack">
+        @if (Model.CanSubmit)
+        {
+            using (Html.BeginForm("Submit", "Claims", FormMethod.Post, new { @class = "inline" }))
+            {
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="id" value="@claim.Id" />
+                <button type="submit">Submit for approval</button>
+            }
+        }
+
+        @if (Model.CanDecide)
+        {
+            using (Html.BeginForm("Approve", "Approvals", FormMethod.Post))
+            {
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="ClaimId" value="@claim.Id" />
+                <div class="field" style="max-width:520px">
+                    <label for="Comment">Comment (required to reject)</label>
+                    <input type="text" id="Comment" name="Comment" />
+                </div>
+                <button type="submit" class="ok">Approve</button>
+                <button type="submit" class="danger" formaction="@Url.Action("Reject", "Approvals")">Reject</button>
+            }
+        }
+
+        @if (Model.CanReimburse)
+        {
+            using (Html.BeginForm("Reimburse", "Approvals", FormMethod.Post, new { @class = "inline" }))
+            {
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="id" value="@claim.Id" />
+                <button type="submit" class="secondary">Mark reimbursed</button>
+            }
+        }
+    </div>
+</div>
+
+<div class="panel">
+    <h3>History</h3>
+    <ul class="history" style="margin:0;padding-left:18px">
+        @foreach (var entry in claim.History.OrderBy(h => h.OccurredUtc))
+        {
+            <li>
+                <strong>@entry.Action</strong>
+                by @(entry.Actor == null ? "?" : entry.Actor.FullName)
+                <span class="muted small">&mdash; @entry.OccurredUtc.ToString("yyyy-MM-dd HH:mm") UTC</span>
+                @if (!string.IsNullOrEmpty(entry.Comment))
+                {
+                    <span class="muted">&ldquo;@entry.Comment&rdquo;</span>
+                }
+            </li>
+        }
+    </ul>
+</div>
+
+<p><a href="@Url.Action("Index", "Claims")">&larr; Back to my claims</a></p>
