@@ -10,8 +10,8 @@ Budget ~45 minutes, most of it waiting on the Visual Studio installer.
 
 Install these two workloads:
 
-- ✅ **ASP.NET and web development** — brings MSBuild web targets, IIS Express, Razor tooling
-- ✅ **.NET desktop development** — needed for the Windows Service project
+- **ASP.NET and web development** — brings MSBuild web targets, IIS Express, Razor tooling
+- **.NET desktop development** — needed for the Windows Service project
 
 Under *Individual components*, confirm **.NET Framework 4.8 targeting pack** is
 checked (the ASP.NET workload normally includes it).

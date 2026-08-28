@@ -10,11 +10,11 @@ wired to a dependency that a real migration has to deal with.
 
 ---
 
-## Phase 1 status: complete — build and run it on Windows
+## Phase 1: complete — build and run it on Windows
 
-👉 **Start here: [docs/01-windows-setup.md](docs/01-windows-setup.md)**
-👉 Then prove it works: [docs/02-verification-checklist.md](docs/02-verification-checklist.md)
-👉 The road ahead: [docs/03-migration-plan.md](docs/03-migration-plan.md)
+Start here: [docs/01-windows-setup.md](docs/01-windows-setup.md).
+Then prove it works: [docs/02-verification-checklist.md](docs/02-verification-checklist.md).
+The road ahead: [docs/03-migration-plan.md](docs/03-migration-plan.md).
 
 ---
 
@@ -24,9 +24,9 @@ wired to a dependency that a real migration has to deal with.
 ExpenseFlow.sln
 ├── src/ExpenseFlow.Domain      net48  entities + pure business rules   ← ports unchanged
 ├── src/ExpenseFlow.Data        net48  EF6 DbContext, mappings, repos   ← mostly mechanical
-├── src/ExpenseFlow.Messaging   net48  MSMQ publisher/receiver          ← HARD BLOCKER
-├── src/ExpenseFlow.Web         net48  MVC 5 + Web API 2 + SignalR 2    ← the strangler target
-├── src/ExpenseFlow.Worker      net48  Windows Service consumer         ← HARD BLOCKER
+├── src/ExpenseFlow.Messaging   net48  MSMQ publisher/receiver          ← blocker
+├── src/ExpenseFlow.Web         net48  MVC 5 + Web API 2 + SignalR 2    ← strangler target
+├── src/ExpenseFlow.Worker      net48  Windows Service consumer         ← blocker
 └── db/                                schema, seed data, stored procs
 ```
 
@@ -37,36 +37,36 @@ ExpenseFlow.sln
 > with **PdfSharp/GDI+** → emails the approver with **SmtpClient** → pushes a live
 > toast through **SignalR 2**.
 
-That is **five** Windows-only or legacy dependencies in a single flow. None of
-them can follow you to macOS. That's the point: the OS boundary does the
-teaching, and you can't hand-wave your way past it.
+That is five Windows-only or legacy dependencies in a single flow. None of them
+can follow you to macOS. That's the point: the OS boundary does the teaching,
+and you can't hand-wave your way past it.
 
 ## The deliberate legacy inventory
 
-| What | Where | Migration difficulty |
-|---|---|---|
-| **MSMQ** (`System.Messaging`) | `ExpenseFlow.Messaging` | 🔴 Never ported. Full replacement. |
-| **Windows Service** (`ServiceBase`) | `Worker/WorkerService.cs` | 🔴 Becomes `BackgroundService` |
-| **System.Drawing / GDI+** | `Worker/Handlers/ThumbnailRenderer.cs` | 🔴 Throws on non-Windows since .NET 6 |
-| **PdfSharp 1.50** (GDI+ backed) | `Worker/Handlers/ClaimPdfWriter.cs` | 🔴 → QuestPDF / PDFsharp 6 |
-| **`HttpContext.Current`** static | `Web/Security/CurrentUser.cs` | 🔴 Doesn't exist. Grep it — big blast radius. |
-| **Forms Authentication** | `Web/Controllers/AccountController.cs` | 🔴 → cookie auth. Migrate **last**. |
-| **`Global.asax`** lifecycle events | `Web/Global.asax.cs` | 🟠 → middleware + `Program.cs` |
-| **`IHttpModule`** | `Web/Modules/AuditLogModule.cs` | 🟠 → middleware |
-| **SignalR 2.x** | `Web/Hubs/NotificationHub.cs` | 🟠 New client, no `/signalr/hubs` proxy |
-| **MVC 5 + Web API 2** side by side | `Web/Controllers/**` | 🟠 Two stacks collapse into one |
-| **EF6** + string-enums + lazy proxies | `ExpenseFlow.Data` | 🟠 → EF Core value converters |
-| **`web.config`** + static `AppSettings` | `Web/App_Start/AppSettings.cs` | 🟡 → `IOptions<T>` |
-| **`System.Web.Optimization`** bundling | `Web/App_Start/BundleConfig.cs` | 🟡 → static assets / Vite |
-| **`packages.config`** | every project | 🟡 First mechanical step |
-| **`Server.MapPath`** file storage | `Web/Security/ReceiptStorage.cs` | 🟡 → `IWebHostEnvironment` |
-| **Salted SHA-256, 1 round** | `Web/Security/PasswordHasher.cs` | 🟡 Security finding → PBKDF2 |
-| **`SmtpClient`** | `Worker/Handlers/EmailSender.cs` | 🟢 Crosses over (obsolete warning only) |
-| **Stored procs via `SqlQuery<T>`** | `Data/Repositories/ReportRepository.cs` | 🟢 API renamed, logic survives |
-| **MAX+1 claim numbering** | `Data/Repositories/ClaimRepository.cs` | 🟢 Racy — fix post-migration |
+| What | Where | Verdict | Notes |
+|---|---|---|---|
+| MSMQ (`System.Messaging`) | `ExpenseFlow.Messaging` | Blocker | Never ported to .NET Core. Full replacement. |
+| Windows Service (`ServiceBase`) | `Worker/WorkerService.cs` | Blocker | Becomes a `BackgroundService` |
+| System.Drawing / GDI+ | `Worker/Handlers/ThumbnailRenderer.cs` | Blocker | Throws on non-Windows since .NET 6 |
+| PdfSharp 1.50 (GDI+ backed) | `Worker/Handlers/ClaimPdfWriter.cs` | Blocker | Replace with QuestPDF or PDFsharp 6 |
+| `HttpContext.Current` static | `Web/Security/CurrentUser.cs` | Blocker | Doesn't exist. Grep it, the blast radius is large. |
+| Forms Authentication | `Web/Controllers/AccountController.cs` | Blocker | Becomes cookie auth. Migrate this last. |
+| `Global.asax` lifecycle events | `Web/Global.asax.cs` | Significant | Becomes middleware plus `Program.cs` |
+| `IHttpModule` | `Web/Modules/AuditLogModule.cs` | Significant | Becomes middleware |
+| SignalR 2.x | `Web/Hubs/NotificationHub.cs` | Significant | New client, no `/signalr/hubs` proxy |
+| MVC 5 and Web API 2 side by side | `Web/Controllers/**` | Significant | Two stacks collapse into one |
+| EF6, string enums, lazy proxies | `ExpenseFlow.Data` | Significant | EF Core value converters |
+| `web.config` + static `AppSettings` | `Web/App_Start/AppSettings.cs` | Minor | Becomes `IOptions<T>` |
+| `System.Web.Optimization` bundling | `Web/App_Start/BundleConfig.cs` | Minor | Static assets or a real front-end build |
+| `packages.config` | every project | Minor | First mechanical step |
+| `Server.MapPath` file storage | `Web/Security/ReceiptStorage.cs` | Minor | Becomes `IWebHostEnvironment` |
+| Salted SHA-256, one round | `Web/Security/PasswordHasher.cs` | Minor | Security finding. Move to PBKDF2. |
+| `SmtpClient` | `Worker/Handlers/EmailSender.cs` | Crosses over | Obsolete warning only. MailKit later. |
+| Stored procs via `SqlQuery<T>` | `Data/Repositories/ReportRepository.cs` | Crosses over | API renamed, the SQL survives |
+| MAX+1 claim numbering | `Data/Repositories/ClaimRepository.cs` | Crosses over | Racy. Fix after the migration. |
 
-🟢 items matter as much as 🔴 ones: knowing what *doesn't* block you is half of
-a good assessment.
+The last three rows matter as much as the first: knowing what *doesn't* block
+you is half of a good assessment.
 
 ### The counterweight
 

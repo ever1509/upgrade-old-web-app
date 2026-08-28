@@ -20,7 +20,7 @@ Windows, and not simultaneously with the .NET 10 port.
 
 ---
 
-## Phase 1 — the legacy app ✅ done
+## Phase 1 — the legacy app (done)
 
 Build it, run it, verify it. See [01-windows-setup.md](01-windows-setup.md) and
 [02-verification-checklist.md](02-verification-checklist.md).
@@ -63,13 +63,13 @@ ledger** — one row per dependency, each with a decision:
 
 | Dependency | Verdict | Replacement | Effort | Risk |
 |---|---|---|---|---|
-| `System.Messaging` (MSMQ) | 🔴 blocker | RabbitMQ | M | M |
-| `ServiceBase` | 🔴 blocker | `BackgroundService` | S | L |
-| `System.Drawing` | 🔴 blocker | ImageSharp | S | L |
-| PdfSharp 1.50 | 🔴 blocker | QuestPDF | M | M |
-| `HttpContext.Current` | 🔴 blocker | `IHttpContextAccessor` | M | H |
-| Forms Auth | 🔴 blocker | cookie auth | L | H |
-| `SmtpClient` | 🟢 crosses over | (MailKit later) | — | — |
+| `System.Messaging` (MSMQ) | Blocker | RabbitMQ | M | M |
+| `ServiceBase` | Blocker | `BackgroundService` | S | L |
+| `System.Drawing` | Blocker | ImageSharp | S | L |
+| PdfSharp 1.50 | Blocker | QuestPDF | M | M |
+| `HttpContext.Current` | Blocker | `IHttpContextAccessor` | M | H |
+| Forms Auth | Blocker | cookie auth | L | H |
+| `SmtpClient` | Crosses over | (MailKit later) | — | — |
 | … | | | | |
 
 Start it by grepping the blast radius of the worst offender:
@@ -78,12 +78,12 @@ Start it by grepping the blast radius of the worst offender:
 findstr /S /N /C:"CurrentUser." src\*.cs src\*.cshtml
 ```
 
-**This document is the deliverable of the whole exercise.** It's what turns
+This document is the real deliverable of the whole exercise. It's what turns
 "I migrated an app" into "here's how I assessed and sequenced a migration."
 
-**Exit criteria:** every 🔴 has a named replacement and an owner-level decision.
+**Exit criteria:** every blocker has a named replacement and a decision attached.
 
-## Phase 4 — de-risk in place (⚠️ the macOS crossing)
+## Phase 4 — de-risk in place (the macOS crossing)
 
 **Still .NET Framework. The last phase that is Windows-only.**
 
@@ -95,7 +95,7 @@ In order:
 4. **MSMQ → RabbitMQ**, *while still on .NET Framework*. `RabbitMQ.Client` supports net472+, so the existing app and the existing tests keep working. Only `MsmqMessagePublisher`/`MsmqMessageReceiver` change — `IMessagePublisher` was the seam that made this cheap.
 5. **SQL Server LocalDB → Developer Edition** with TCP enabled, so something outside the VM can reach it.
 
-### 🍎 The crossing
+### The crossing
 
 Once step 3 lands, `Domain`, `Data` and `Messaging` build on .NET 10 — so they
 build in **Rider on macOS**. From here:

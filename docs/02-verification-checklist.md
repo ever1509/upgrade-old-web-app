@@ -38,7 +38,7 @@ Still as Alice, on `CLM-000001`:
 > assertions your phase 2 characterization tests will encode.** Write down the
 > messages you see — they're the expected values.
 
-## D. The queue → worker → notification pipeline ⭐
+## D. The queue, the worker, the notification pipeline
 
 This is the flow the whole exercise is built around.
 
@@ -140,7 +140,7 @@ That's your golden master. Phase 2 turns it into executable tests.
 
 ---
 
-## ✅ Phase 1 is done when
+## Phase 1 is done when
 
 You can submit a claim end to end, watch five different Windows-only
 dependencies fire in the worker log, and approve it as a different user with the
