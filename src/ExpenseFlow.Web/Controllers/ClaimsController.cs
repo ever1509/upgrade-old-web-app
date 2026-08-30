@@ -179,7 +179,9 @@ namespace ExpenseFlow.Web.Controllers
 
             var relativePath = ReceiptStorage.Save(file, claim.Id);
 
-            Claims.AddReceipt(new Receipt
+            // Fully qualified: this class declares a Receipt() action, and a
+            // member name hides a type of the same name.
+            Claims.AddReceipt(new ExpenseFlow.Domain.Entities.Receipt
             {
                 ExpenseLineId = line.Id,
                 FileName = Path.GetFileName(file.FileName),

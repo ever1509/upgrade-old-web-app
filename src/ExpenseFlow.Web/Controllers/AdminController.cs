@@ -19,8 +19,8 @@ namespace ExpenseFlow.Web.Controllers
             if (from.HasValue) model.FromUtc = from.Value;
             if (to.HasValue) model.ToUtc = to.Value;
 
-            model.ByDepartment = Reports.SpendByDepartment(model.FromUtc, model.ToUtc);
-            model.ByCategory = Reports.SpendByCategory(model.FromUtc, model.ToUtc);
+            model.ByDepartment = Reporting.SpendByDepartment(model.FromUtc, model.ToUtc);
+            model.ByCategory = Reporting.SpendByCategory(model.FromUtc, model.ToUtc);
 
             return View(model);
         }

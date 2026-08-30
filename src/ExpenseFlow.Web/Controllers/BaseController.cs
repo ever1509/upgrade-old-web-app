@@ -42,7 +42,13 @@ namespace ExpenseFlow.Web.Controllers
             get { return new LookupRepository(Db); }
         }
 
-        protected IReportRepository Reports
+        /// <summary>
+        /// Named "Reporting" rather than "Reports" so it does not collide with
+        /// AdminController's Reports action - a method name always wins over an
+        /// inherited property, which is the kind of trap a base class full of
+        /// convenience members sets for you.
+        /// </summary>
+        protected IReportRepository Reporting
         {
             get { return new ReportRepository(Db); }
         }
