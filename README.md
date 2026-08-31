@@ -21,6 +21,7 @@ what was learned so far.
 Start here: [docs/01-windows-setup.md](docs/01-windows-setup.md).
 Then prove it works: [docs/02-verification-checklist.md](docs/02-verification-checklist.md).
 The road ahead: [docs/03-migration-plan.md](docs/03-migration-plan.md).
+The assessment: [docs/04-assessment-ledger.md](docs/04-assessment-ledger.md).
 
 ---
 

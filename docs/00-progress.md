@@ -21,7 +21,7 @@ describes its behaviour, and three findings about why it cannot stay where it is
 |---|---|---|
 | 1. Build the legacy app | Done | Runs in Windows 11 under Parallels, VS 2026. Fully verified, section D included. |
 | 2. Characterization tests | Mostly | 72 rule tests green; EF integration tests not written |
-| 3. Assessment / ledger | **Next** | Findings below are the raw material |
+| 3. Assessment / ledger | Drafted | [04-assessment-ledger.md](04-assessment-ledger.md). Still to run `upgrade-assistant analyze` in Windows and reconcile. |
 | 4. De-risk in place | Barely started | Transport swap done early, out of necessity |
 | 5. Strangler cutover | Not started | |
 | 6. Delete the old app | Not started | |
@@ -116,8 +116,8 @@ whole design of the migration, and it was demonstrated rather than asserted.
 
 ## Next actions
 
-1. **Phase 3 — write the ledger.** Run `upgrade-assistant analyze`, grep the
-   blast radius of `CurrentUser.`, and produce a decision per dependency.
+1. **Run `upgrade-assistant analyze` in Windows** and reconcile its output
+   against [04-assessment-ledger.md](04-assessment-ledger.md).
 2. **First .NET 10 artifact** — multi-target `ExpenseFlow.Domain` as
    `net48;net10.0`. Already verified to compile and pass all 72 tests on .NET 10.
    This is the point the work can move to Rider on macOS.
