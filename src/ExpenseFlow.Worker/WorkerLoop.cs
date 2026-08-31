@@ -52,16 +52,22 @@ namespace ExpenseFlow.Worker
 
         private void Run()
         {
-            Log.InfoFormat("Listening on {0}", WorkerConfig.QueuePath);
+            Log.InfoFormat("Listening on {0}", MessagingFactory.Describe(
+                WorkerConfig.Transport, WorkerConfig.QueuePath, WorkerConfig.QueueDirectory));
 
-            MsmqMessageReceiver receiver;
+            IMessageReceiver receiver;
             try
             {
-                receiver = new MsmqMessageReceiver(WorkerConfig.QueuePath, WorkerConfig.DeadLetterPath);
+                receiver = MessagingFactory.CreateReceiver(
+                    WorkerConfig.Transport,
+                    WorkerConfig.QueuePath,
+                    WorkerConfig.DeadLetterPath,
+                    WorkerConfig.QueueDirectory);
             }
             catch (Exception ex)
             {
-                Log.Fatal("Could not open the MSMQ queues. Is the MSMQ Windows feature installed?", ex);
+                Log.Fatal("Could not open the message queue. If Transport is 'msmq', "
+                        + "check the MSMQ Windows feature is installed.", ex);
                 return;
             }
 

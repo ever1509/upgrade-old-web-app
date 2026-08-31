@@ -9,7 +9,7 @@ namespace ExpenseFlow.Messaging
     /// Blocking MSMQ receiver used by the Windows Service. Failed messages
     /// are retried up to MaxDeliveryCount, then moved to a dead-letter queue.
     /// </summary>
-    public class MsmqMessageReceiver : IDisposable
+    public class MsmqMessageReceiver : IMessageReceiver
     {
         public const int MaxDeliveryCount = 3;
 

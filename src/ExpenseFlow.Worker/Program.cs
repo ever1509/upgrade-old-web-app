@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.ServiceProcess;
 using System.Threading;
+using ExpenseFlow.Messaging;
 using log4net;
 using log4net.Config;
 
@@ -32,7 +33,8 @@ namespace ExpenseFlow.Worker
         private static int RunInteractive()
         {
             Console.WriteLine("ExpenseFlow worker - console mode. Press Ctrl+C to stop.");
-            Console.WriteLine("  queue   : " + WorkerConfig.QueuePath);
+            Console.WriteLine("  queue   : " + MessagingFactory.Describe(
+                WorkerConfig.Transport, WorkerConfig.QueuePath, WorkerConfig.QueueDirectory));
             Console.WriteLine("  uploads : " + WorkerConfig.UploadRoot);
             Console.WriteLine("  pdf     : " + WorkerConfig.PdfRoot);
             Console.WriteLine("  web     : " + WorkerConfig.WebBaseUrl);
@@ -64,7 +66,7 @@ namespace ExpenseFlow.Worker
 
         private static void EnsureDirectories()
         {
-            foreach (var path in new[] { WorkerConfig.UploadRoot, WorkerConfig.PdfRoot })
+            foreach (var path in new[] { WorkerConfig.UploadRoot, WorkerConfig.PdfRoot, WorkerConfig.QueueDirectory })
             {
                 try
                 {

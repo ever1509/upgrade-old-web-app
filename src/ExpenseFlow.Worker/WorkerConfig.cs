@@ -4,6 +4,8 @@ namespace ExpenseFlow.Worker
 {
     public static class WorkerConfig
     {
+        public static string Transport { get { return Get("ExpenseFlow:Transport", "file"); } }
+        public static string QueueDirectory { get { return Get("ExpenseFlow:QueueDirectory", @"C:\ExpenseFlow\queue"); } }
         public static string QueuePath { get { return Get("ExpenseFlow:QueuePath", @".\private$\expenseflow"); } }
         public static string DeadLetterPath { get { return Get("ExpenseFlow:DeadLetterPath", @".\private$\expenseflow_dead"); } }
         public static string UploadRoot { get { return Get("ExpenseFlow:UploadRoot", @"C:\ExpenseFlow\uploads"); } }

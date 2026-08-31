@@ -45,7 +45,12 @@
     <Compile Include="Contracts\ClaimDecidedMessage.cs" />
     <Compile Include="Contracts\ClaimSubmittedMessage.cs" />
     <Compile Include="Contracts\MessageEnvelope.cs" />
+    <Compile Include="FileQueueNames.cs" />
+    <Compile Include="FileSystemMessagePublisher.cs" />
+    <Compile Include="FileSystemMessageReceiver.cs" />
     <Compile Include="IMessagePublisher.cs" />
+    <Compile Include="IMessageReceiver.cs" />
+    <Compile Include="MessagingFactory.cs" />
     <Compile Include="MsmqNames.cs" />
     <Compile Include="MsmqMessagePublisher.cs" />
     <Compile Include="MsmqMessageReceiver.cs" />

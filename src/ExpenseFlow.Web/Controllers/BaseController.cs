@@ -55,7 +55,11 @@ namespace ExpenseFlow.Web.Controllers
 
         protected IMessagePublisher Publisher
         {
-            get { return _publisher ?? (_publisher = new MsmqMessagePublisher(AppSettings.QueuePath)); }
+            get
+            {
+                return _publisher ?? (_publisher = MessagingFactory.CreatePublisher(
+                    AppSettings.Transport, AppSettings.QueuePath, AppSettings.QueueDirectory));
+            }
         }
 
         /// <summary>The signed-in employee, loaded through the static ambient accessor.</summary>

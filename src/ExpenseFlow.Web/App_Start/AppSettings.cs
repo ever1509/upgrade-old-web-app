@@ -14,9 +14,20 @@ namespace ExpenseFlow.Web
     /// </summary>
     public static class AppSettings
     {
+        /// <summary>"msmq" or "file". Defaults to file, since current Windows cannot install MSMQ.</summary>
+        public static string Transport
+        {
+            get { return Get("ExpenseFlow:Transport", "file"); }
+        }
+
         public static string QueuePath
         {
             get { return Get("ExpenseFlow:QueuePath", @".\private$\expenseflow"); }
+        }
+
+        public static string QueueDirectory
+        {
+            get { return Get("ExpenseFlow:QueueDirectory", @"C:\ExpenseFlow\queue"); }
         }
 
         public static string UploadPath
