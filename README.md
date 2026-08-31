@@ -10,6 +10,12 @@ wired to a dependency that a real migration has to deal with.
 
 ---
 
+## Current state
+
+The migration has not started yet — see
+[docs/00-progress.md](docs/00-progress.md) for exactly where things stand and
+what was learned so far.
+
 ## Phase 1: complete — build and run it on Windows
 
 Start here: [docs/01-windows-setup.md](docs/01-windows-setup.md).
