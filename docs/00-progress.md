@@ -19,7 +19,7 @@ describes its behaviour, and three findings about why it cannot stay where it is
 
 | Phase | State | Notes |
 |---|---|---|
-| 1. Build the legacy app | Done | Runs in Windows 11 under Parallels, VS 2026 |
+| 1. Build the legacy app | Done | Runs in Windows 11 under Parallels, VS 2026. Fully verified, section D included. |
 | 2. Characterization tests | Mostly | 72 rule tests green; EF integration tests not written |
 | 3. Assessment / ledger | **Next** | Findings below are the raw material |
 | 4. De-risk in place | Barely started | Transport swap done early, out of necessity |
@@ -40,7 +40,20 @@ describes its behaviour, and three findings about why it cannot stay where it is
 
 Verified by hand: authentication, all claim submission rules, approval and
 rejection including the self-approval block and the 500 senior-approval
-threshold, the Web API endpoints, the reports page, and the audit module.
+threshold, the Web API endpoints, the reports page, the audit module, and the
+full background pipeline.
+
+The pipeline was confirmed on CLM-000003:
+
+```
+Received claim.submitted (CLM-000003)
+Thumbnail rendered for receipt 3
+PDF written: C:\ExpenseFlow\pdf\CLM-000003.pdf
+Email queued for bob@expenseflow.local
+```
+
+A baseline PDF, .eml and thumbnail have been kept for comparison after the
+worker is rebuilt on .NET 10.
 
 ## Findings log
 
@@ -82,10 +95,11 @@ looks like a connection string.
 **Response:** switched to SQL Server Express reached over a socket, where
 architecture is irrelevant. One connection-string change.
 
-### F-3. Three Windows-only APIs still untested against the migration
+### F-3. Three Windows-only APIs now have a verified baseline
 
 `System.Drawing` (thumbnails), PdfSharp 1.50 over GDI+ (claim PDFs), and
-`SmtpClient` (email). All three now execute, so a baseline exists.
+`SmtpClient` (email) have all been observed working end to end, so their output
+can be diffed after the migration rather than taken on trust.
 
 `System.Drawing` throws on non-Windows since .NET 6, and PdfSharp 1.50 is
 GDI+-backed. `SmtpClient` will cross over with only an obsolescence warning —
