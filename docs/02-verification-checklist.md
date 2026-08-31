@@ -40,9 +40,12 @@ Still as Alice, on `CLM-000001`:
 
 ## D. The queue, the worker, the notification pipeline
 
-This is the flow the whole exercise is built around — and on a machine without
-MSMQ you cannot run it yet. Skip to section E and come back once the transport
-has been replaced with RabbitMQ. Nothing else in this checklist depends on it.
+This is the flow the whole exercise is built around.
+
+If MSMQ is unavailable on your machine — the normal case now — the app falls
+back to a file-based queue in `C:\ExpenseFlow\queue`, so this section still
+runs. Watch that folder while you submit: a `.json` file appears and then
+vanishes as the worker claims it.
 
 - [ ] Click **Submit for approval**
 - [ ] The page shows *"Claim CLM-000001 submitted."* and status flips to **Submitted**
@@ -58,10 +61,11 @@ has been replaced with RabbitMQ. Nothing else in this checklist depends on it.
 > If the toast doesn't appear but everything else does, the CDN is blocked.
 > Not a problem — note it and move on.
 
-**Now inspect the queue itself.** Open `compmgmt.msc` → Services and Applications
-→ Message Queuing → Private Queues → `expenseflow`. It should be empty (drained).
-Stop the worker, submit another claim, and watch a message *sit* in that queue
-until you restart the worker.
+**Now inspect the queue itself.** With the file transport, just watch
+`C:\ExpenseFlow\queue` in Explorer. It should be empty (drained). Stop the
+worker, submit another claim, and watch a `.json` file *sit* there until you
+start the worker again. (On MSMQ the equivalent is `compmgmt.msc` → Services and
+Applications → Message Queuing → Private Queues → `expenseflow`.)
 
 - [ ] Messages visibly queue up while the worker is stopped, and drain when it starts
 
