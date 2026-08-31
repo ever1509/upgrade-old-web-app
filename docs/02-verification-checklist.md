@@ -40,7 +40,9 @@ Still as Alice, on `CLM-000001`:
 
 ## D. The queue, the worker, the notification pipeline
 
-This is the flow the whole exercise is built around.
+This is the flow the whole exercise is built around — and on a machine without
+MSMQ you cannot run it yet. Skip to section E and come back once the transport
+has been replaced with RabbitMQ. Nothing else in this checklist depends on it.
 
 - [ ] Click **Submit for approval**
 - [ ] The page shows *"Claim CLM-000001 submitted."* and status flips to **Submitted**

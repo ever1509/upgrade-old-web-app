@@ -20,24 +20,37 @@ checked (the ASP.NET workload normally includes it).
 > template. Every `.csproj` in this repo is hand-written, so you just open the
 > solution. If VS 2026 has dropped those templates, it changes nothing here.
 
-## 2. Enable MSMQ
+## 2. MSMQ (expect this to fail)
 
-This is a Windows *feature*, not a NuGet package. Open **PowerShell as
-Administrator**:
+The app publishes to MSMQ, which is a Windows *feature*, not a NuGet package.
+Try to enable it from **PowerShell as Administrator**:
 
 ```powershell
 Enable-WindowsOptionalFeature -Online -FeatureName MSMQ-Server -All
 ```
 
-Reboot if it asks. Verify it took:
+**On a current Windows 11 this will almost certainly fail** with
+`Feature name MSMQ-Server is unknown`. Confirm what your machine actually has:
 
 ```powershell
-Get-Service MSMQ
+Get-WindowsOptionalFeature -Online | Where-Object FeatureName -like "*MSMQ*" | Select-Object FeatureName, State
 ```
 
-You want `Status: Running`. Without this the app still runs and claims still
-submit — you'll just get a "notification service could not be reached" warning
-and the worker will log a fatal error on startup.
+If the only result is `WCF-MSMQ-Activation45`, MSMQ is not installable here.
+Microsoft has been deprecating it, and Windows on ARM ships a reduced feature
+set. That is the expected outcome, and it is not a problem to fix — it is the
+first real finding of the exercise, so write it down for the phase 3 ledger.
+
+Consequences, both handled:
+
+* the web app catches the publish failure and shows *"Claim submitted, but the
+  notification service could not be reached"* — the claim still submits and
+  every business rule still runs
+* the worker logs a fatal MSMQ error on startup and idles
+
+Everything except section D of the verification checklist works without it.
+Replacing MSMQ with RabbitMQ is phase 4 step 4; when MSMQ is simply absent, you
+do that step earlier than planned.
 
 ## 3. Create the shared folders
 
@@ -64,25 +77,44 @@ occasionally produces file-locking errors.
 
 ## 5. Create the database
 
-The app uses **LocalDB**, which ships with Visual Studio — nothing to install.
+**Use SQL Server Express, not LocalDB.** Both `Web.config` and the worker's
+`App.config` are configured for `.\SQLEXPRESS` with Windows authentication, so
+there is nothing to edit.
 
-From the repo root in PowerShell:
+Check what you already have — Visual Studio installs often include Express:
 
 ```powershell
-sqlcmd -S "(localdb)\MSSQLLocalDB" -E -i db\01_schema.sql -i db\02_seed.sql -i db\03_reporting_procs.sql
+Get-Service | Where-Object { $_.Name -like 'MSSQL*' } | Select-Object Name, Status
 ```
 
-If `sqlcmd` isn't on your PATH, open the three files in **SQL Server Object
-Explorer** inside Visual Studio (View → SQL Server Object Explorer → connect to
-`(localdb)\MSSQLLocalDB`) and run them in order.
+`MSSQL$SQLEXPRESS` means you are ready. If it is missing, install **SQL Server
+Express** (or Developer Edition) and re-run the check.
+
+Create the schema and seed data:
+
+```powershell
+sqlcmd -S ".\SQLEXPRESS" -E -i db\01_schema.sql -i db\02_seed.sql -i db\03_reporting_procs.sql
+```
 
 Confirm it worked:
 
 ```powershell
-sqlcmd -S "(localdb)\MSSQLLocalDB" -E -d ExpenseFlow -Q "SELECT FullName, Role FROM dbo.Employees"
+sqlcmd -S ".\SQLEXPRESS" -E -d ExpenseFlow -Q "SELECT FullName, Role FROM dbo.Employees"
 ```
 
-You should see five people.
+Five people, ending with Erik Lindqvist. If `sqlcmd` is not on your PATH, open
+the three files in SSMS or in Visual Studio's SQL Server Object Explorer and run
+them in order.
+
+> **Why not LocalDB?** .NET Framework's `SqlClient` starts a LocalDB instance by
+> loading `sqluserinstance.dll` *into the calling process*, so IIS Express and
+> LocalDB must share a CPU architecture. When they do not — which is the normal
+> case on Windows on ARM — you get
+> `EntityException: The underlying provider failed on Open` wrapping
+> `Win32Exception: '%1 is not a valid Win32 application'`. Confusingly, `sqlcmd`
+> still works, because it is a separate binary whose architecture happens to
+> match. A normal SQL Server instance is a service reached over a socket, so the
+> question never arises. This is the second finding for your ledger.
 
 ## 6. Restore NuGet packages
 
@@ -160,7 +192,17 @@ Restore didn't run, or a `HintPath` doesn't match the restored version. Check
 `packages\` actually contains the folder named in the `.csproj`.
 
 **Worker logs "Could not open the MSMQ queues"**
-Step 2 didn't take. Check `Get-Service MSMQ`.
+Expected on any Windows without MSMQ — see step 2. The worker idles; nothing
+else is affected.
+
+**"The CodeDom provider type Microsoft.CodeDom.Providers.DotNetCompilerPlatform
+could not be located"**
+Should not happen any more — that provider was removed. If you see it, you are
+on an older commit; pull.
+
+**`EntityException: The underlying provider failed on Open`, inner
+`Win32Exception: '%1 is not a valid Win32 application'`**
+You are pointed at LocalDB instead of SQL Server Express. See step 5.
 
 **Login page loads but has no styling**
 `Styles.Render` failed. Confirm `src\ExpenseFlow.Web\Content\site.css` exists and
