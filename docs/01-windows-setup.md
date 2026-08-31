@@ -48,9 +48,28 @@ Consequences, both handled:
   every business rule still runs
 * the worker logs a fatal MSMQ error on startup and idles
 
-Everything except section D of the verification checklist works without it.
-Replacing MSMQ with RabbitMQ is phase 4 step 4; when MSMQ is simply absent, you
-do that step earlier than planned.
+### The stand-in
+
+Rather than lose the whole background pipeline, the app ships a second
+transport: a queue made of JSON files in a folder. It is selected by
+
+```xml
+<add key="ExpenseFlow:Transport" value="file" />
+```
+
+in both `Web.config` and the worker's `App.config`, and it is the default.
+Set it to `msmq` on a machine that still has MSMQ.
+
+The file queue keeps the shape that matters — the web request hands work off and
+returns immediately, a separate process picks it up later — along with
+oldest-first delivery, retries, dead-lettering after three failures, and
+recovery of messages abandoned by a crashed worker. It is a bridge, not the
+destination: phase 4 replaces it with RabbitMQ, once `packages.config` has
+become `PackageReference` and transitive dependencies stop being hand-wired.
+
+`IMessagePublisher` and `IMessageReceiver` are why this was a small change. The
+web app and the worker never referenced MSMQ directly, so swapping the transport
+touched neither.
 
 ## 3. Create the shared folders
 
@@ -58,12 +77,13 @@ The web app and the Windows Service exchange files through the filesystem, by
 convention. Both configs point at these paths:
 
 ```powershell
-New-Item -ItemType Directory -Force -Path C:\ExpenseFlow\uploads, C:\ExpenseFlow\pdf, C:\ExpenseFlow\mail
+New-Item -ItemType Directory -Force -Path C:\ExpenseFlow\uploads, C:\ExpenseFlow\pdf, C:\ExpenseFlow\mail, C:\ExpenseFlow\queue
 ```
 
 - `uploads` — receipt originals + generated thumbnails
 - `pdf` — generated claim PDFs
 - `mail` — outgoing email as `.eml` files (no SMTP server needed)
+- `queue` — the file-based message queue standing in for MSMQ
 
 ## 4. Clone the repo
 
