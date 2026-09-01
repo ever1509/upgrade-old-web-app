@@ -98,6 +98,18 @@ changing behaviour, which is not the same as difficulty.
 | C5 | `MAX+1` claim numbering | Racy under concurrency. A correctness bug, not a migration one. Fix after. |
 | C6 | Dual write in `ClaimsController.Submit` | `SaveChanges` and `Publish` are separate transactions. Transactional outbox, phase 5. |
 | C7 | EF6 on non-Framework targets pulls `System.Drawing.Common` 4.7.0 | NuGet flags it as a **known critical vulnerability** (GHSA-rxg9-xrhp-64gj). Harmless while EF6 is only a transitional state, but it must not survive into production. Another reason B5 (EF Core) is not optional. |
+| C8 | `log4net` 2.0.15 flagged by NuGet audit | Known moderate severity vulnerability (GHSA-4f7c-pmjv-c25w). Independent of the migration - it wants upgrading regardless - but the migration is the natural moment to do it. |
+
+### Security posture
+
+Two of the three vulnerability warnings NuGet raises against this solution come
+from dependencies that are simply old, not from anything the migration
+introduces. Recording them here because "we upgraded the framework" is the only
+moment anyone will fund fixing them, and because a legacy codebase's security
+debt is part of the honest case for migrating:
+
+* `System.Drawing.Common` 4.7.0 - **critical**, arrives transitively with EF6
+* `log4net` 2.0.15 - **moderate**
 
 ## Why B5, B6 and B9 are the high-risk three
 

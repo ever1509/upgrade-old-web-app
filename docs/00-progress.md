@@ -8,12 +8,13 @@ Living status page. Update it as phases complete.
 
 ## The short version
 
-The migration has **not started**. Everything so far is preparation, and that is
-deliberate: nothing targets .NET 10 yet, and nothing should until the assessment
-is written down.
+The migration has **started**, minimally and deliberately. The assessment is
+written, and the two projects that were always portable now build for .NET 10
+alongside .NET Framework 4.8.
 
-What exists is a working .NET Framework 4.8 application, a test suite that
-describes its behaviour, and three findings about why it cannot stay where it is.
+The same 72 tests run against both frameworks — 144 assertions from one command —
+which is the mechanism that makes every remaining step verifiable rather than
+hopeful. The web app and the worker have not moved and will not for some time.
 
 ## Phase status
 
@@ -21,8 +22,8 @@ describes its behaviour, and three findings about why it cannot stay where it is
 |---|---|---|
 | 1. Build the legacy app | Done | Runs in Windows 11 under Parallels, VS 2026. Fully verified, section D included. |
 | 2. Characterization tests | Mostly | 72 rule tests green; EF integration tests not written |
-| 3. Assessment / ledger | Drafted | [04-assessment-ledger.md](04-assessment-ledger.md). Still to run `upgrade-assistant analyze` in Windows and reconcile. |
-| 4. De-risk in place | Barely started | Transport swap done early, out of necessity |
+| 3. Assessment / ledger | Done | [04-assessment-ledger.md](04-assessment-ledger.md). Still to run `upgrade-assistant analyze` in Windows and reconcile. |
+| 4. De-risk in place | In progress | `Domain`, `Data`, `Tests` are SDK-style and multi-target `net48;net10.0`. `Web`, `Worker`, `Messaging` still on `packages.config`. |
 | 5. Strangler cutover | Not started | |
 | 6. Delete the old app | Not started | |
 | 7. Modernise | Not started | |
@@ -36,7 +37,8 @@ describes its behaviour, and three findings about why it cannot stay where it is
 | Database | SQL Server Express 2014, `.\SQLEXPRESS`, Windows auth |
 | Queue | File-based, `C:\ExpenseFlow\queue` (MSMQ is not installable) |
 | Worker | Console mode; thumbnails, PDF, email, notifications |
-| Tests | `dotnet test` / VS Test Explorer, 72 passing |
+| Tests | `dotnet test` — **144 passing**, 72 on `net48` and 72 on `net10.0` |
+| Portable set | `ExpenseFlow.Portable.slnf` — open this in Rider on macOS, not the full solution |
 
 Verified by hand: authentication, all claim submission rules, approval and
 rejection including the self-approval block and the 500 senior-approval
@@ -116,11 +118,14 @@ whole design of the migration, and it was demonstrated rather than asserted.
 
 ## Next actions
 
-1. **Run `upgrade-assistant analyze` in Windows** and reconcile its output
-   against [04-assessment-ledger.md](04-assessment-ledger.md).
-2. **First .NET 10 artifact** — multi-target `ExpenseFlow.Domain` as
-   `net48;net10.0`. Already verified to compile and pass all 72 tests on .NET 10.
-   This is the point the work can move to Rider on macOS.
-3. **Finish phase 2** — EF integration tests against SQL Server Express.
-4. **Phase 4 proper** — `packages.config` to `PackageReference`, SDK-style
-   projects, then RabbitMQ.
+1. **Slice 1 — port the worker to .NET 10.** It has no `System.Web`, so it is
+   the lowest-risk thing that produces a running .NET 10 process. Replaces
+   `System.Drawing` with ImageSharp, PdfSharp with QuestPDF, and `ServiceBase`
+   with `BackgroundService`. The baseline PDF and thumbnail from CLM-000003 are
+   what the new output gets compared against.
+2. **Convert the remaining projects** to `PackageReference` and SDK-style, which
+   also turns on NuGet vulnerability auditing for them.
+3. **Run `upgrade-assistant analyze` in Windows** and reconcile against the
+   ledger. Where it stays silent is as informative as where it fires.
+4. **Finish phase 2** — EF integration tests against SQL Server Express.
+5. **B5, EF6 to EF Core** — the highest-risk item. Not before slice 1.
