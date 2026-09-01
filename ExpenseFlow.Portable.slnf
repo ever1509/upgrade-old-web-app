@@ -1,0 +1,10 @@
+{
+  "solution": {
+    "path": "ExpenseFlow.sln",
+    "projects": [
+      "src\\ExpenseFlow.Domain\\ExpenseFlow.Domain.csproj",
+      "src\\ExpenseFlow.Data\\ExpenseFlow.Data.csproj",
+      "tests\\ExpenseFlow.Tests\\ExpenseFlow.Tests.csproj"
+    ]
+  }
+}

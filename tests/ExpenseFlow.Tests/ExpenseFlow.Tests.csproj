@@ -1,25 +1,23 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <!--
-    SDK-style csproj deliberately targeting .NET Framework 4.8.
+    Now multi-targeted, which is the whole point of the exercise.
 
-    Two reasons: it keeps the legacy app untouched while giving the tests a
-    modern project format, and it is a rehearsal for phase 4, when every
-    project makes this same conversion. At that point this single line
+    The same 72 assertions run against .NET Framework 4.8 AND .NET 10. When a
+    migration step changes behaviour, one leg goes red and the other stays
+    green, and the difference is the bug. Without this you are comparing a
+    memory of how the old app behaved against how the new one behaves.
 
-        <TargetFramework>net48</TargetFramework>
+        dotnet test -f net10.0    works on macOS
+        dotnet test -f net48      Windows only
 
-    becomes
-
-        <TargetFrameworks>net48;net10.0</TargetFrameworks>
-
-    and the rule tests below start running on BOTH stacks - which is what
-    lets you prove the migrated app behaves identically to the old one.
+    Running with no -f runs both, which is what CI should do.
   -->
 
   <PropertyGroup>
-    <TargetFramework>net48</TargetFramework>
-    <LangVersion>latest</LangVersion>
+    <TargetFrameworks>net48;net10.0</TargetFrameworks>
+    <LangVersion>7.3</LangVersion>
+    <Nullable>disable</Nullable>
     <IsPackable>false</IsPackable>
     <AssemblyName>ExpenseFlow.Tests</AssemblyName>
     <RootNamespace>ExpenseFlow.Tests</RootNamespace>
@@ -32,9 +30,6 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
-    <!-- The Data project resolves EF6 through a packages.config HintPath;
-         referencing it here too guarantees it lands in the test output. -->
-    <PackageReference Include="EntityFramework" Version="6.4.4" />
   </ItemGroup>
 
   <ItemGroup>

@@ -97,6 +97,7 @@ changing behaviour, which is not the same as difficulty.
 | C4 | `Server.MapPath` | One file. Becomes `IWebHostEnvironment`. |
 | C5 | `MAX+1` claim numbering | Racy under concurrency. A correctness bug, not a migration one. Fix after. |
 | C6 | Dual write in `ClaimsController.Submit` | `SaveChanges` and `Publish` are separate transactions. Transactional outbox, phase 5. |
+| C7 | EF6 on non-Framework targets pulls `System.Drawing.Common` 4.7.0 | NuGet flags it as a **known critical vulnerability** (GHSA-rxg9-xrhp-64gj). Harmless while EF6 is only a transitional state, but it must not survive into production. Another reason B5 (EF Core) is not optional. |
 
 ## Why B5, B6 and B9 are the high-risk three
 

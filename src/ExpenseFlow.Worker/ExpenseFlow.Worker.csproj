@@ -77,14 +77,8 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\ExpenseFlow.Domain\ExpenseFlow.Domain.csproj">
-      <Project>{A1B2C3D4-0001-4000-9000-000000000001}</Project>
-      <Name>ExpenseFlow.Domain</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\ExpenseFlow.Data\ExpenseFlow.Data.csproj">
-      <Project>{A1B2C3D4-0002-4000-9000-000000000002}</Project>
-      <Name>ExpenseFlow.Data</Name>
-    </ProjectReference>
+    <ProjectReference Include="..\ExpenseFlow.Domain\ExpenseFlow.Domain.csproj" />
+    <ProjectReference Include="..\ExpenseFlow.Data\ExpenseFlow.Data.csproj" />
     <ProjectReference Include="..\ExpenseFlow.Messaging\ExpenseFlow.Messaging.csproj">
       <Project>{A1B2C3D4-0003-4000-9000-000000000003}</Project>
       <Name>ExpenseFlow.Messaging</Name>

@@ -1,57 +1,33 @@
-<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="15.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Phase 4, steps 1-3, applied to the one project that was always going to be
+    free: SDK-style, and multi-targeted.
+
+    Domain has no System.Web, no EF, no Windows APIs - just entities and rules -
+    so it compiles for .NET 10 with no changes at all. That is the payoff for
+    having kept it pure, and it is the contrast that explains why everything
+    else in this solution is expensive.
+
+    net48   - consumed by the existing Web and Worker projects
+    net10.0 - the destination, and what lets this build in Rider on macOS
+  -->
+
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{A1B2C3D4-0001-4000-9000-000000000001}</ProjectGuid>
-    <OutputType>Library</OutputType>
+    <TargetFrameworks>net48;net10.0</TargetFrameworks>
     <RootNamespace>ExpenseFlow.Domain</RootNamespace>
     <AssemblyName>ExpenseFlow.Domain</AssemblyName>
-    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
-    <FileAlignment>512</FileAlignment>
-    <Deterministic>true</Deterministic>
+    <!-- Pinned so nothing accidentally uses syntax the net48 leg cannot compile. -->
+    <LangVersion>7.3</LangVersion>
+    <Nullable>disable</Nullable>
+    <!-- Keep the hand-written Properties/AssemblyInfo.cs instead of generating one. -->
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <DebugType>pdbonly</DebugType>
-    <Optimize>true</Optimize>
-    <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-  </PropertyGroup>
-  <ItemGroup>
+
+  <ItemGroup Condition="'$(TargetFramework)' == 'net48'">
     <Reference Include="System" />
-    <Reference Include="System.ComponentModel.DataAnnotations" />
     <Reference Include="System.Core" />
+    <Reference Include="System.ComponentModel.DataAnnotations" />
   </ItemGroup>
-  <ItemGroup>
-    <Compile Include="Entities\ApprovalHistory.cs" />
-    <Compile Include="Entities\AuditLogEntry.cs" />
-    <Compile Include="Entities\Employee.cs" />
-    <Compile Include="Entities\ExpenseCategory.cs" />
-    <Compile Include="Entities\ExpenseClaim.cs" />
-    <Compile Include="Entities\ExpenseLine.cs" />
-    <Compile Include="Entities\Project.cs" />
-    <Compile Include="Entities\Receipt.cs" />
-    <Compile Include="Enums\ApprovalAction.cs" />
-    <Compile Include="Enums\ClaimStatus.cs" />
-    <Compile Include="Enums\UserRole.cs" />
-    <Compile Include="Reporting\CategorySpendRow.cs" />
-    <Compile Include="Reporting\DepartmentSpendRow.cs" />
-    <Compile Include="Workflow\ApprovalPolicy.cs" />
-    <Compile Include="Workflow\ClaimWorkflow.cs" />
-    <Compile Include="Workflow\RuleResult.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
-  </ItemGroup>
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+
 </Project>

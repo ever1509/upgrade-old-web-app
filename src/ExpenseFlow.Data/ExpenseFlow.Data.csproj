@@ -1,75 +1,47 @@
-<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="15.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Also multi-targeted, which is less obvious than Domain but turns out to
+    work: EF6 ships a netstandard2.1 build, so the DbContext, the mappings and
+    the repositories all compile for .NET 10 unchanged.
+
+    That does NOT mean the data layer is migrated. It means it compiles. EF6 on
+    .NET 10 is a transitional state, not a destination - the real work is
+    EF6 -> EF Core, which is ledger item B5 and the highest-risk item in the
+    whole migration because it fails silently rather than at build time.
+
+    What this buys today: the tests can exercise this code on .NET 10, on macOS.
+  -->
+
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{A1B2C3D4-0002-4000-9000-000000000002}</ProjectGuid>
-    <OutputType>Library</OutputType>
+    <TargetFrameworks>net48;net10.0</TargetFrameworks>
     <RootNamespace>ExpenseFlow.Data</RootNamespace>
     <AssemblyName>ExpenseFlow.Data</AssemblyName>
-    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
-    <FileAlignment>512</FileAlignment>
-    <Deterministic>true</Deterministic>
+    <LangVersion>7.3</LangVersion>
+    <Nullable>disable</Nullable>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <DebugType>pdbonly</DebugType>
-    <Optimize>true</Optimize>
-    <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-  </PropertyGroup>
+
   <ItemGroup>
-    <Reference Include="EntityFramework, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\EntityFramework.6.4.4\lib\net45\EntityFramework.dll</HintPath>
-    </Reference>
-    <Reference Include="EntityFramework.SqlServer, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\EntityFramework.6.4.4\lib\net45\EntityFramework.SqlServer.dll</HintPath>
-    </Reference>
+    <PackageReference Include="EntityFramework" Version="6.4.4" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(TargetFramework)' == 'net48'">
     <Reference Include="System" />
-    <Reference Include="System.ComponentModel.DataAnnotations" />
-    <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
     <Reference Include="System.Data" />
+    <Reference Include="System.ComponentModel.DataAnnotations" />
+    <Reference Include="System.Configuration" />
   </ItemGroup>
+
+  <ItemGroup Condition="'$(TargetFramework)' != 'net48'">
+    <!-- On .NET Framework, SqlParameter comes from System.Data.dll.
+         Everywhere else it needs an explicit package. -->
+    <PackageReference Include="System.Data.SqlClient" Version="4.8.6" />
+  </ItemGroup>
+
   <ItemGroup>
-    <Compile Include="ExpenseFlowContext.cs" />
-    <Compile Include="Mappings\ApprovalHistoryMap.cs" />
-    <Compile Include="Mappings\AuditLogEntryMap.cs" />
-    <Compile Include="Mappings\EmployeeMap.cs" />
-    <Compile Include="Mappings\ExpenseCategoryMap.cs" />
-    <Compile Include="Mappings\ExpenseClaimMap.cs" />
-    <Compile Include="Mappings\ExpenseLineMap.cs" />
-    <Compile Include="Mappings\ProjectMap.cs" />
-    <Compile Include="Mappings\ReceiptMap.cs" />
-    <Compile Include="Repositories\ClaimRepository.cs" />
-    <Compile Include="Repositories\EmployeeRepository.cs" />
-    <Compile Include="Repositories\IClaimRepository.cs" />
-    <Compile Include="Repositories\IEmployeeRepository.cs" />
-    <Compile Include="Repositories\ILookupRepository.cs" />
-    <Compile Include="Repositories\IReportRepository.cs" />
-    <Compile Include="Repositories\LookupRepository.cs" />
-    <Compile Include="Repositories\ReportRepository.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
+    <ProjectReference Include="..\ExpenseFlow.Domain\ExpenseFlow.Domain.csproj" />
   </ItemGroup>
-  <ItemGroup>
-    <None Include="packages.config" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\ExpenseFlow.Domain\ExpenseFlow.Domain.csproj">
-      <Project>{A1B2C3D4-0001-4000-9000-000000000001}</Project>
-      <Name>ExpenseFlow.Domain</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+
 </Project>
