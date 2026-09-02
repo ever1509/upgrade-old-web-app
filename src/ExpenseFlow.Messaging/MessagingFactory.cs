@@ -20,22 +20,27 @@ namespace ExpenseFlow.Messaging
 
         public static IMessagePublisher CreatePublisher(string transport, string msmqPath, string queueDirectory)
         {
-            return IsMsmq(transport)
-                ? (IMessagePublisher)new MsmqMessagePublisher(msmqPath)
-                : new FileSystemMessagePublisher(queueDirectory);
+#if NET48
+            if (IsMsmq(transport)) return new MsmqMessagePublisher(msmqPath);
+#endif
+            return new FileSystemMessagePublisher(queueDirectory);
         }
 
         public static IMessageReceiver CreateReceiver(string transport, string msmqPath,
                                                       string msmqDeadLetterPath, string queueDirectory)
         {
-            return IsMsmq(transport)
-                ? (IMessageReceiver)new MsmqMessageReceiver(msmqPath, msmqDeadLetterPath)
-                : new FileSystemMessageReceiver(queueDirectory);
+#if NET48
+            if (IsMsmq(transport)) return new MsmqMessageReceiver(msmqPath, msmqDeadLetterPath);
+#endif
+            return new FileSystemMessageReceiver(queueDirectory);
         }
 
         public static string Describe(string transport, string msmqPath, string queueDirectory)
         {
-            return IsMsmq(transport) ? "MSMQ " + msmqPath : "file queue " + queueDirectory;
+#if NET48
+            if (IsMsmq(transport)) return "MSMQ " + msmqPath;
+#endif
+            return "file queue " + queueDirectory;
         }
 
         private static bool IsMsmq(string transport)

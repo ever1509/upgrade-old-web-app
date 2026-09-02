@@ -1,0 +1,35 @@
+<Project Sdk="Microsoft.NET.Sdk.Worker">
+
+  <!--
+    Slice 1 of the strangler migration: the worker, reborn on .NET 10.
+
+    This project exists alongside the original ExpenseFlow.Worker rather than
+    replacing it. Both read the same file queue, so they can be run against the
+    same input and their output compared. The old one is deleted at phase 6,
+    once this one is proven - at which point this is renamed to plain
+    ExpenseFlow.Worker.
+
+    Chosen first because it has no System.Web whatsoever, which makes it the
+    lowest-risk thing in the solution that produces a genuinely running .NET 10
+    process. It also runs natively on macOS, unlike everything it replaces.
+  -->
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>ExpenseFlow.Worker.Core</RootNamespace>
+    <AssemblyName>ExpenseFlow.Worker.Core</AssemblyName>
+    <UserSecretsId>expenseflow-worker-core</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\ExpenseFlow.Domain\ExpenseFlow.Domain.csproj" />
+    <ProjectReference Include="..\ExpenseFlow.Messaging\ExpenseFlow.Messaging.csproj" />
+  </ItemGroup>
+
+</Project>

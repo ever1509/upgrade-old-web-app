@@ -1,69 +1,46 @@
-<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="15.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Multi-targeted, with the MSMQ implementation compiled only for net48.
+
+    System.Messaging does not exist outside .NET Framework, so rather than
+    delete the MSMQ classes - they are the "before" half of the migration
+    story and worth keeping - they are simply excluded from the net10.0
+    compilation. MessagingFactory guards its MSMQ arms with #if NET48.
+
+    Result: the file transport, the contracts and both interfaces are fully
+    portable, so a .NET 10 worker can consume the same queue the .NET
+    Framework web app publishes to. That is what makes slice 1 possible.
+  -->
+
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{A1B2C3D4-0003-4000-9000-000000000003}</ProjectGuid>
-    <OutputType>Library</OutputType>
+    <TargetFrameworks>net48;net10.0</TargetFrameworks>
     <RootNamespace>ExpenseFlow.Messaging</RootNamespace>
     <AssemblyName>ExpenseFlow.Messaging</AssemblyName>
-    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
-    <FileAlignment>512</FileAlignment>
-    <Deterministic>true</Deterministic>
+    <LangVersion>7.3</LangVersion>
+    <Nullable>disable</Nullable>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <DebugType>pdbonly</DebugType>
-    <Optimize>true</Optimize>
-    <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-  </PropertyGroup>
+
   <ItemGroup>
-    <Reference Include="Newtonsoft.Json, Version=13.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\Newtonsoft.Json.13.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
-    </Reference>
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+  </ItemGroup>
+
+  <!-- MSMQ is .NET Framework only, in both directions: the API and the OS. -->
+  <ItemGroup Condition="'$(TargetFramework)' == 'net48'">
     <Reference Include="System" />
     <Reference Include="System.Core" />
-    <!-- ***** THE BLOCKER *****
-         System.Messaging (MSMQ) does not exist in .NET Core / .NET 5+.
-         It was never ported and never will be. This single reference is
-         why the worker cannot follow you to macOS. -->
     <Reference Include="System.Messaging" />
   </ItemGroup>
-  <ItemGroup>
-    <Compile Include="Contracts\ClaimDecidedMessage.cs" />
-    <Compile Include="Contracts\ClaimSubmittedMessage.cs" />
-    <Compile Include="Contracts\MessageEnvelope.cs" />
-    <Compile Include="FileQueueNames.cs" />
-    <Compile Include="FileSystemMessagePublisher.cs" />
-    <Compile Include="FileSystemMessageReceiver.cs" />
-    <Compile Include="IMessagePublisher.cs" />
-    <Compile Include="IMessageReceiver.cs" />
-    <Compile Include="MessagingFactory.cs" />
-    <Compile Include="MsmqNames.cs" />
-    <Compile Include="MsmqMessagePublisher.cs" />
-    <Compile Include="MsmqMessageReceiver.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
+
+  <ItemGroup Condition="'$(TargetFramework)' != 'net48'">
+    <Compile Remove="MsmqMessagePublisher.cs" />
+    <Compile Remove="MsmqMessageReceiver.cs" />
+    <Compile Remove="MsmqNames.cs" />
   </ItemGroup>
+
   <ItemGroup>
-    <None Include="packages.config" />
+    <ProjectReference Include="..\ExpenseFlow.Domain\ExpenseFlow.Domain.csproj" />
   </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\ExpenseFlow.Domain\ExpenseFlow.Domain.csproj">
-      <Project>{A1B2C3D4-0001-4000-9000-000000000001}</Project>
-      <Name>ExpenseFlow.Domain</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+
 </Project>

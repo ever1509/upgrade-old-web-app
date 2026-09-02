@@ -79,10 +79,7 @@
   <ItemGroup>
     <ProjectReference Include="..\ExpenseFlow.Domain\ExpenseFlow.Domain.csproj" />
     <ProjectReference Include="..\ExpenseFlow.Data\ExpenseFlow.Data.csproj" />
-    <ProjectReference Include="..\ExpenseFlow.Messaging\ExpenseFlow.Messaging.csproj">
-      <Project>{A1B2C3D4-0003-4000-9000-000000000003}</Project>
-      <Name>ExpenseFlow.Messaging</Name>
-    </ProjectReference>
+    <ProjectReference Include="..\ExpenseFlow.Messaging\ExpenseFlow.Messaging.csproj" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

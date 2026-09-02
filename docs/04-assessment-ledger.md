@@ -100,6 +100,30 @@ changing behaviour, which is not the same as difficulty.
 | C7 | EF6 on non-Framework targets pulls `System.Drawing.Common` 4.7.0 | NuGet flags it as a **known critical vulnerability** (GHSA-rxg9-xrhp-64gj). Harmless while EF6 is only a transitional state, but it must not survive into production. Another reason B5 (EF Core) is not optional. |
 | C8 | `log4net` 2.0.15 flagged by NuGet audit | Known moderate severity vulnerability (GHSA-4f7c-pmjv-c25w). Independent of the migration - it wants upgrading regardless - but the migration is the natural moment to do it. |
 
+### The web project cannot be built by the modern toolchain at all
+
+`dotnet build ExpenseFlow.sln` fails on `ExpenseFlow.Web` with **MSB4019**:
+`Microsoft.WebApplication.targets` was not found. That file ships with Visual
+Studio, not with the .NET SDK, so the SDK's MSBuild cannot resolve it.
+
+Every other project in the solution builds fine from `dotnet build`, both
+frameworks included. Only the classic Web Application project does not.
+
+Consequences while the web app remains on .NET Framework:
+
+* the full solution can only be built by `msbuild.exe` from a Visual Studio
+  install, never by `dotnet build`
+* CI requires a Windows agent with Visual Studio, not merely the .NET SDK
+* the web project can never build on macOS, no matter what else is ported
+
+Use the **Developer PowerShell for VS** (where `msbuild` is on the PATH) for
+whole-solution builds, and `dotnet build` / `dotnet test` for everything else.
+This split disappears at phase 5, when the web app becomes an SDK-style
+ASP.NET Core project.
+
+It is also a good measure of progress: the day `dotnet build ExpenseFlow.sln`
+succeeds is the day the last .NET Framework dependency leaves the solution.
+
 ### Security posture
 
 Two of the three vulnerability warnings NuGet raises against this solution come
