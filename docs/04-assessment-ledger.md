@@ -124,6 +124,32 @@ ASP.NET Core project.
 It is also a good measure of progress: the day `dotnet build ExpenseFlow.sln`
 succeeds is the day the last .NET Framework dependency leaves the solution.
 
+### The replacements for System.Drawing are not free the way it was
+
+`System.Drawing` was part of the BCL: no licence, no cost, no audit. Its
+replacements are third-party packages with their own terms, and this turned out
+to matter more than expected.
+
+| Package | Outcome |
+|---|---|
+| `SixLabors.ImageSharp` 4.1.1 | Builds, but emits *"No Six Labors license found... Please obtain a license"*. ImageSharp 4.x requires a **paid** licence. |
+| `SixLabors.ImageSharp` 3.1.5 | Free under the older split licence, but carries a **high** and a **moderate** severity vulnerability. |
+| `SixLabors.ImageSharp` 3.1.12 | Clean: no licence warning, no known vulnerabilities. **Pinned to this.** |
+| `QuestPDF` 2026.8.0 | Free under the Community licence below a revenue threshold; `LicenseType.Community` must be set explicitly in code. |
+
+The 3.1.x split licence is free for open source and for companies under a
+revenue threshold. Above it, both replacements carry a cost that the original
+BCL API did not.
+
+**Implication:** "replace `System.Drawing` with ImageSharp" is a procurement
+decision as well as a technical one, and the version has to be pinned
+deliberately — the newest is licensed, and the obvious older one is vulnerable.
+Exactly the sort of thing static analysis does not tell you, and worth raising
+with whoever owns the budget before the work starts, not after.
+
+`SkiaSharp` (MIT, Microsoft-maintained) is the alternative if the licence terms
+are ever a problem.
+
 ### Security posture
 
 Two of the three vulnerability warnings NuGet raises against this solution come
