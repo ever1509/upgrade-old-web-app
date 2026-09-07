@@ -1,4 +1,3 @@
-using System.Data.Entity;
 using ExpenseFlow.Data;
 using ExpenseFlow.Data.Repositories;
 using ExpenseFlow.Domain.Entities;
@@ -31,12 +30,24 @@ public sealed class Ef6ClaimStore : IClaimStore
     public ExpenseClaim? GetClaimWithDetails(int claimId)
     {
         using var db = new ExpenseFlowContext(_connectionString);
-        var claim = new ClaimRepository(db).GetByIdWithDetails(claimId);
 
-        // The context is disposed on return, so detach the graph first.
-        // Lazy loading has already been satisfied by the eager Includes.
-        if (claim is not null) db.Entry(claim).State = EntityState.Detached;
-        return claim;
+        // Return plain POCOs rather than change-tracked lazy-loading proxies.
+        //
+        // The obvious alternative - load the graph, then set the entry State to
+        // Detached before the context is disposed - is WRONG, and silently so.
+        // EF6 tears down the relationship manager when an entity is detached,
+        // which clears its navigation properties: Employee, Project and Lines
+        // all come back null or empty while the scalar columns survive. The
+        // generated PDF then shows the right total over no line items, and
+        // nothing anywhere reports an error.
+        //
+        // Turning both flags off means the Includes below are the only source
+        // of related data, and the resulting objects are ordinary instances
+        // that outlive the context perfectly well.
+        db.Configuration.ProxyCreationEnabled = false;
+        db.Configuration.LazyLoadingEnabled = false;
+
+        return new ClaimRepository(db).GetByIdWithDetails(claimId);
     }
 
     public void SetReceiptThumbnail(int receiptId, string relativeThumbnailPath)

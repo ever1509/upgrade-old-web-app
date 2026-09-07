@@ -24,7 +24,7 @@ hopeful. The web app and the worker have not moved and will not for some time.
 | 2. Characterization tests | Mostly | 72 rule tests green; EF integration tests not written |
 | 3. Assessment / ledger | Done | [04-assessment-ledger.md](04-assessment-ledger.md). Still to run `upgrade-assistant analyze` in Windows and reconcile. |
 | 4. De-risk in place | In progress | `Domain`, `Data`, `Tests` are SDK-style and multi-target `net48;net10.0`. `Web`, `Worker`, `Messaging` still on `packages.config`. |
-| 5. Strangler cutover | Slice 1 in progress | `ExpenseFlow.Worker.Core` on .NET 10 does thumbnails, PDF, email and notifications. Verified on macOS; not yet verified against SQL Server. |
+| 5. Strangler cutover | **Slice 1 done** | `ExpenseFlow.Worker.Core` on .NET 10 verified end to end in Windows against SQL Server Express, and on macOS with a stub store. Clears B2, B3, B4. |
 | 6. Delete the old app | Not started | |
 | 7. Modernise | Not started | |
 | 8. PostgreSQL (optional) | Not started | |
@@ -36,8 +36,8 @@ hopeful. The web app and the worker have not moved and will not for some time.
 | Web app | MVC 5 + Web API 2 + SignalR 2 on IIS Express, port 52080 |
 | Database | SQL Server Express 2014, `.\SQLEXPRESS`, Windows auth |
 | Queue | File-based, `C:\ExpenseFlow\queue` (MSMQ is not installable) |
-| Worker (legacy) | .NET Framework 4.8, console mode. Still the one in use. |
-| Worker (.NET 10) | `ExpenseFlow.Worker.Core`. Same queue, same output. Runs on macOS. |
+| Worker (legacy) | .NET Framework 4.8. Superseded; kept only for comparison. |
+| Worker (.NET 10) | `ExpenseFlow.Worker.Core`. **The one to use.** Runs on Windows and macOS. |
 | Tests | `dotnet test` — **144 passing**, 72 on `net48` and 72 on `net10.0` |
 | Portable set | `ExpenseFlow.Portable.slnf` — open this in Rider on macOS, not the full solution |
 
@@ -57,6 +57,24 @@ Email queued for bob@expenseflow.local
 
 A baseline PDF, .eml and thumbnail have been kept for comparison after the
 worker is rebuilt on .NET 10.
+
+## Slice 1 result
+
+The worker moved to .NET 10 and behaved identically. What made it cheap:
+
+* it never touched `System.Web`, so the message-handling logic transferred
+  almost unchanged
+* the transport was already behind `IMessagePublisher` / `IMessageReceiver`,
+  so old and new workers read the same queue with no adapter
+* the data access went behind `IClaimStore` **before** the port, so EF6 could be
+  carried over as-is and swapped later without touching the worker
+
+What was replaced: `ServiceBase` to `BackgroundService`, `System.Drawing` to
+ImageSharp, PdfSharp to QuestPDF, static log4net to injected `ILogger`,
+`ConfigurationManager` to `IOptions<T>`, manual thread control to
+`CancellationToken`.
+
+What was deliberately not replaced: `SmtpClient`, which works fine on .NET 10.
 
 ## Findings log
 
@@ -119,10 +137,15 @@ whole design of the migration, and it was demonstrated rather than asserted.
 
 ## Next actions
 
-1. **Verify slice 1 against SQL Server Express in Windows**, then diff the new
-   worker's PDF against the baseline the old one produced. That is what turns
-   slice 1 from "compiles and runs" into "proven".
-2. **Convert the remaining projects** to `PackageReference` and SDK-style, which
+1. **Retire the legacy worker.** The .NET 10 one is proven; running both against
+   the same queue invites confusion. Delete `ExpenseFlow.Worker`, or park it
+   behind a clearly-marked switch.
+2. **Write the EF integration tests.** Promoted ahead of slice 2: the port
+   introduced a silent data-loss bug (see the ledger) that no existing test
+   could have caught, and the same class of failure is the main risk in B5.
+3. **Slice 2 — admin reports.** Read-only, tiny surface, no writes. The safe way
+   to prove the YARP seam before anything with consequences goes through it.
+4. **Convert the remaining projects** to `PackageReference` and SDK-style, which
    also turns on NuGet vulnerability auditing for them.
 3. **Run `upgrade-assistant analyze` in Windows** and reconcile against the
    ledger. Where it stays silent is as informative as where it fires.

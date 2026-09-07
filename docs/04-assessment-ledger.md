@@ -124,6 +124,49 @@ ASP.NET Core project.
 It is also a good measure of progress: the day `dotnet build ExpenseFlow.sln`
 succeeds is the day the last .NET Framework dependency leaves the solution.
 
+### The port introduced a silent data-loss bug, caught only by comparing output
+
+Worth recording in detail, because it is the exact failure mode this whole
+approach is designed to catch.
+
+**Symptom.** The .NET 10 worker generated a PDF for CLM-000005 showing the
+correct claim number and the correct total of 25.00 USD, but with **no
+claimant, no project, and an empty line-items table**. The web application
+showed all of it correctly. No exception, no warning, no failing test.
+
+**Cause.** The new worker had to return a claim from a method that disposes its
+`DbContext`, so the graph was loaded with `Include(...)` and then detached:
+
+```csharp
+db.Entry(claim).State = EntityState.Detached;   // wrong
+```
+
+EF6 tears down an entity's relationship manager when it is detached, which
+**clears its navigation properties**. `Employee`, `Project` and `Lines` were
+emptied on the way out. Scalar columns survived, so the total still looked
+right - which is what made it plausible at a glance.
+
+Knock-on effect: the thumbnail step iterates
+`claim.Lines.SelectMany(l => l.Receipts)`, so with `Lines` empty **no thumbnails
+were generated either**, equally silently.
+
+**Fix.** Do not detach. Turn off proxy creation and lazy loading for the read,
+so the `Include`s are the only source of related data and the result is a plain
+object graph that outlives the context.
+
+**Why it matters beyond this one bug:**
+
+* it was introduced by the *port*, not by any change in business logic
+* the 144 characterization tests could not catch it - they cover
+  `ClaimWorkflow`, which is pure, while this lives in data access
+* it was found only because the old and new output were compared side by side
+* it is precisely the class of failure the ledger predicts for B5: **data-layer
+  changes that fail quietly rather than at build time**
+
+It also sharpens the outstanding phase 2 gap. The EF integration tests are
+still unwritten, and they are exactly what would have caught this
+automatically. That work should now come before slice 2, not after.
+
 ### EF6 needs its provider registered in code once there is no app.config
 
 On .NET Framework, EF6 finds its SQL Server provider through the
