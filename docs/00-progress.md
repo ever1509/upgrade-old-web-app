@@ -24,7 +24,7 @@ hopeful. The web app and the worker have not moved and will not for some time.
 | 2. Characterization tests | Mostly | 72 rule tests green; EF integration tests not written |
 | 3. Assessment / ledger | Done | [04-assessment-ledger.md](04-assessment-ledger.md). Still to run `upgrade-assistant analyze` in Windows and reconcile. |
 | 4. De-risk in place | In progress | `Domain`, `Data`, `Tests` are SDK-style and multi-target `net48;net10.0`. `Web`, `Worker`, `Messaging` still on `packages.config`. |
-| 5. Strangler cutover | Not started | |
+| 5. Strangler cutover | Slice 1 in progress | `ExpenseFlow.Worker.Core` on .NET 10 does thumbnails, PDF, email and notifications. Verified on macOS; not yet verified against SQL Server. |
 | 6. Delete the old app | Not started | |
 | 7. Modernise | Not started | |
 | 8. PostgreSQL (optional) | Not started | |
@@ -36,7 +36,8 @@ hopeful. The web app and the worker have not moved and will not for some time.
 | Web app | MVC 5 + Web API 2 + SignalR 2 on IIS Express, port 52080 |
 | Database | SQL Server Express 2014, `.\SQLEXPRESS`, Windows auth |
 | Queue | File-based, `C:\ExpenseFlow\queue` (MSMQ is not installable) |
-| Worker | Console mode; thumbnails, PDF, email, notifications |
+| Worker (legacy) | .NET Framework 4.8, console mode. Still the one in use. |
+| Worker (.NET 10) | `ExpenseFlow.Worker.Core`. Same queue, same output. Runs on macOS. |
 | Tests | `dotnet test` — **144 passing**, 72 on `net48` and 72 on `net10.0` |
 | Portable set | `ExpenseFlow.Portable.slnf` — open this in Rider on macOS, not the full solution |
 
@@ -118,11 +119,9 @@ whole design of the migration, and it was demonstrated rather than asserted.
 
 ## Next actions
 
-1. **Slice 1 — port the worker to .NET 10.** It has no `System.Web`, so it is
-   the lowest-risk thing that produces a running .NET 10 process. Replaces
-   `System.Drawing` with ImageSharp, PdfSharp with QuestPDF, and `ServiceBase`
-   with `BackgroundService`. The baseline PDF and thumbnail from CLM-000003 are
-   what the new output gets compared against.
+1. **Verify slice 1 against SQL Server Express in Windows**, then diff the new
+   worker's PDF against the baseline the old one produced. That is what turns
+   slice 1 from "compiles and runs" into "proven".
 2. **Convert the remaining projects** to `PackageReference` and SDK-style, which
    also turns on NuGet vulnerability auditing for them.
 3. **Run `upgrade-assistant analyze` in Windows** and reconcile against the

@@ -124,6 +124,22 @@ ASP.NET Core project.
 It is also a good measure of progress: the day `dotnet build ExpenseFlow.sln`
 succeeds is the day the last .NET Framework dependency leaves the solution.
 
+### EF6 needs its provider registered in code once there is no app.config
+
+On .NET Framework, EF6 finds its SQL Server provider through the
+`<entityFramework>` section of `app.config`. A .NET 10 worker has no
+`app.config`, so without an explicit `DbConfiguration` every query fails with
+"No Entity Framework provider found for the ADO.NET provider with invariant
+name 'System.Data.SqlClient'".
+
+Two related consequences: the connection string also has to be passed to the
+context explicitly, because `name=ExpenseFlow` no longer resolves through
+`ConfigurationManager`.
+
+Neither is documented prominently in the porting guides, and both are confusing
+the first time. Both disappear with EF6 itself at B5. See
+`WorkerDbConfiguration` in the .NET 10 worker.
+
 ### The replacements for System.Drawing are not free the way it was
 
 `System.Drawing` was part of the BCL: no licence, no cost, no audit. Its
