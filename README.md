@@ -85,6 +85,39 @@ config. It's the anchor of the whole exercise:
 * it's the **first thing that compiles unchanged on .NET 10**;
 * it's the contrast that shows *why* everything else hurts.
 
+## Running the tests
+
+```bash
+dotnet test tests/ExpenseFlow.Tests/ExpenseFlow.Tests.csproj
+```
+
+Two kinds of test live in that project. The rule tests need nothing. The
+integration tests need a real SQL Server, build a throwaway database from
+`db/*.sql`, and never touch the application's own `ExpenseFlow` database.
+
+**Windows** — nothing to configure. The tests find `.\SQLEXPRESS` and use
+Windows authentication. Both frameworks run.
+
+**macOS** — run SQL Server in Docker and point the tests at it:
+
+```bash
+docker run -d --name expenseflow-sql --platform linux/amd64 \
+  -e ACCEPT_EULA=Y -e 'MSSQL_SA_PASSWORD=ExpenseFlow!2026' \
+  -p 1433:1433 mcr.microsoft.com/mssql/server:2022-latest
+
+export EXPENSEFLOW_TEST_CONNECTION='Data Source=localhost,1433;User Id=sa;Password=ExpenseFlow!2026;TrustServerCertificate=True;MultipleActiveResultSets=True'
+dotnet test tests/ExpenseFlow.Tests/ExpenseFlow.Tests.csproj -f net10.0
+```
+
+Only the `net10.0` leg runs on macOS; `net48` needs Windows. Without a database
+the integration tests skip themselves rather than fail.
+
+The two setups differ on purpose. The Windows VM mirrors the legacy estate —
+SQL Server on a Windows box, Windows authentication. Docker mirrors the target —
+a containerised database and a SQL login. Windows authentication does not work
+from a container or a Mac at all, which is one of the less obvious migration
+problems this project is here to surface.
+
 ## Seeded accounts
 
 Password for all: `Passw0rd!`
