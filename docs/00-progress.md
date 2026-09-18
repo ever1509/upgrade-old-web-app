@@ -38,7 +38,22 @@ hopeful. The web app and the worker have not moved and will not for some time.
 | Queue | File-based, `C:\ExpenseFlow\queue` (MSMQ is not installable) |
 | Worker (legacy) | .NET Framework 4.8. Superseded; kept only for comparison. |
 | Worker (.NET 10) | `ExpenseFlow.Worker.Core`. **The one to use.** Runs on Windows and macOS. |
-| Front door (.NET 10) | `ExpenseFlow.Web.Core` on port 5080. Serves its own routes, forwards everything else to the legacy app on 52080 via YARP. Browse the app through 5080. |
+| Front door (.NET 10) | `ExpenseFlow.Web.Core` on port 5080. Serves its own routes, forwards everything else to the legacy app on 52080 via YARP. Browse the app through 5080. Verified in Windows: the full app works through it. |
+
+### Running the app now
+
+The front door and the legacy app must run **at the same time** - every page
+still comes from the legacy app, and 5080 only forwards to it. If 52080 is not
+listening, 5080 answers every request with `502 Bad Gateway`.
+
+Easiest in Visual Studio: *Configure Startup Projects* -> *Multiple startup
+projects*, set `ExpenseFlow.Web`, `ExpenseFlow.Web.Core` and
+`ExpenseFlow.Worker.Core` to **Start**. Starting projects one after another does
+not work: each F5 stops the previous debug session, so launching the front door
+quietly shuts the legacy app down behind it.
+
+Which app served a page is visible in the browser: the response header
+`X-ExpenseFlow-Served-By` is `legacy` or `core`.
 | Tests | `dotnet test` — **144 passing**, 72 on `net48` and 72 on `net10.0` |
 | Portable set | `ExpenseFlow.Portable.slnf` — open this in Rider on macOS, not the full solution |
 
