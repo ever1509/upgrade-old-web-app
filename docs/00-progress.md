@@ -24,7 +24,7 @@ hopeful. The web app and the worker have not moved and will not for some time.
 | 2. Characterization tests | Done | 72 rule tests on both frameworks, plus 13 integration tests against a real SQL Server built from `db/*.sql`. |
 | 3. Assessment / ledger | Done | [04-assessment-ledger.md](04-assessment-ledger.md). Still to run `upgrade-assistant analyze` in Windows and reconcile. |
 | 4. De-risk in place | In progress | `Domain`, `Data`, `Tests` are SDK-style and multi-target `net48;net10.0`. `Web`, `Worker`, `Messaging` still on `packages.config`. |
-| 5. Strangler cutover | **Slice 1 done** | `ExpenseFlow.Worker.Core` on .NET 10 verified end to end in Windows against SQL Server Express, and on macOS with a stub store. Clears B2, B3, B4. |
+| 5. Strangler cutover | **Slice 1 done, slice 2a done** | `ExpenseFlow.Worker.Core` on .NET 10 verified end to end in Windows against SQL Server Express, and on macOS with a stub store. Clears B2, B3, B4. |
 | 6. Delete the old app | Not started | |
 | 7. Modernise | Not started | |
 | 8. PostgreSQL (optional) | Not started | |
@@ -38,6 +38,7 @@ hopeful. The web app and the worker have not moved and will not for some time.
 | Queue | File-based, `C:\ExpenseFlow\queue` (MSMQ is not installable) |
 | Worker (legacy) | .NET Framework 4.8. Superseded; kept only for comparison. |
 | Worker (.NET 10) | `ExpenseFlow.Worker.Core`. **The one to use.** Runs on Windows and macOS. |
+| Front door (.NET 10) | `ExpenseFlow.Web.Core` on port 5080. Serves its own routes, forwards everything else to the legacy app on 52080 via YARP. Browse the app through 5080. |
 | Tests | `dotnet test` — **144 passing**, 72 on `net48` and 72 on `net10.0` |
 | Portable set | `ExpenseFlow.Portable.slnf` — open this in Rider on macOS, not the full solution |
 
@@ -140,8 +141,10 @@ whole design of the migration, and it was demonstrated rather than asserted.
 1. **Retire the legacy worker.** The .NET 10 one is proven; running both against
    the same queue invites confusion. Delete `ExpenseFlow.Worker`, or park it
    behind a clearly-marked switch.
-2. **Slice 2 — admin reports.** Read-only, tiny surface, no writes. The safe way
-   to prove the YARP seam before anything with consequences goes through it.
+2. **Slice 2b — move admin reports** into `ExpenseFlow.Web.Core`. Needs the new
+   app to know who the user is, which is where the System.Web adapters' remote
+   authentication comes in - and that needs the legacy web project on
+   `PackageReference` first.
 3. **Convert the remaining projects** to `PackageReference` and SDK-style, which
    also turns on NuGet vulnerability auditing for them.
 3. **Run `upgrade-assistant analyze` in Windows** and reconcile against the

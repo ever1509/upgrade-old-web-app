@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <!--
+    Slice 2 of the strangler migration: the new front door.
+
+    Every browser request now arrives here first. Anything this app knows how
+    to serve, it serves. Everything else is forwarded, unchanged, to the
+    .NET Framework app via a catch-all route with the lowest possible priority
+    - Microsoft's incremental migration pattern.
+
+    Routes move from the old app to this one a slice at a time. When nothing is
+    forwarded any more, the old app can be switched off (phase 6).
+  -->
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>ExpenseFlow.Web.Core</RootNamespace>
+    <AssemblyName>ExpenseFlow.Web.Core</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Yarp.ReverseProxy" Version="2.3.0" />
+  </ItemGroup>
+
+</Project>
