@@ -21,7 +21,7 @@ hopeful. The web app and the worker have not moved and will not for some time.
 | Phase | State | Notes |
 |---|---|---|
 | 1. Build the legacy app | Done | Runs in Windows 11 under Parallels, VS 2026. Fully verified, section D included. |
-| 2. Characterization tests | Mostly | 72 rule tests green; EF integration tests not written |
+| 2. Characterization tests | Done | 72 rule tests on both frameworks, plus 13 integration tests against a real SQL Server built from `db/*.sql`. |
 | 3. Assessment / ledger | Done | [04-assessment-ledger.md](04-assessment-ledger.md). Still to run `upgrade-assistant analyze` in Windows and reconcile. |
 | 4. De-risk in place | In progress | `Domain`, `Data`, `Tests` are SDK-style and multi-target `net48;net10.0`. `Web`, `Worker`, `Messaging` still on `packages.config`. |
 | 5. Strangler cutover | **Slice 1 done** | `ExpenseFlow.Worker.Core` on .NET 10 verified end to end in Windows against SQL Server Express, and on macOS with a stub store. Clears B2, B3, B4. |
@@ -140,12 +140,9 @@ whole design of the migration, and it was demonstrated rather than asserted.
 1. **Retire the legacy worker.** The .NET 10 one is proven; running both against
    the same queue invites confusion. Delete `ExpenseFlow.Worker`, or park it
    behind a clearly-marked switch.
-2. **Write the EF integration tests.** Promoted ahead of slice 2: the port
-   introduced a silent data-loss bug (see the ledger) that no existing test
-   could have caught, and the same class of failure is the main risk in B5.
-3. **Slice 2 — admin reports.** Read-only, tiny surface, no writes. The safe way
+2. **Slice 2 — admin reports.** Read-only, tiny surface, no writes. The safe way
    to prove the YARP seam before anything with consequences goes through it.
-4. **Convert the remaining projects** to `PackageReference` and SDK-style, which
+3. **Convert the remaining projects** to `PackageReference` and SDK-style, which
    also turns on NuGet vulnerability auditing for them.
 3. **Run `upgrade-assistant analyze` in Windows** and reconcile against the
    ledger. Where it stays silent is as informative as where it fires.

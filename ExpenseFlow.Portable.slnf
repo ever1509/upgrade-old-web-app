@@ -2,8 +2,10 @@
   "solution": {
     "path": "ExpenseFlow.sln",
     "projects": [
-      "src\\ExpenseFlow.Domain\\ExpenseFlow.Domain.csproj",
       "src\\ExpenseFlow.Data\\ExpenseFlow.Data.csproj",
+      "src\\ExpenseFlow.Domain\\ExpenseFlow.Domain.csproj",
+      "src\\ExpenseFlow.Messaging\\ExpenseFlow.Messaging.csproj",
+      "src\\ExpenseFlow.Worker.Core\\ExpenseFlow.Worker.Core.csproj",
       "tests\\ExpenseFlow.Tests\\ExpenseFlow.Tests.csproj"
     ]
   }

@@ -37,4 +37,14 @@
     <ProjectReference Include="..\..\src\ExpenseFlow.Data\ExpenseFlow.Data.csproj" />
   </ItemGroup>
 
+  <!-- SqlConnection for the integration fixture. On .NET 10 it arrives with Data. -->
+  <ItemGroup Condition="'$(TargetFramework)' == 'net48'">
+    <Reference Include="System.Data" />
+  </ItemGroup>
+
+  <!-- The .NET 10 worker only exists on one side, so its tests do too. -->
+  <ItemGroup Condition="'$(TargetFramework)' != 'net48'">
+    <ProjectReference Include="..\..\src\ExpenseFlow.Worker.Core\ExpenseFlow.Worker.Core.csproj" />
+  </ItemGroup>
+
 </Project>

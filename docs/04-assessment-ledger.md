@@ -95,7 +95,7 @@ changing behaviour, which is not the same as difficulty.
 | C2 | Stored procedures via `SqlQuery<T>` | API renamed; the SQL is untouched. |
 | C3 | `ConfigurationManager` / static `AppSettings` | Becomes `IOptions<ApprovalPolicy>`. Only 3 uses. |
 | C4 | `Server.MapPath` | One file. Becomes `IWebHostEnvironment`. |
-| C5 | `MAX+1` claim numbering | Racy under concurrency. A correctness bug, not a migration one. Fix after. |
+| C5 | `MAX+1` claim numbering | Racy under concurrency, and — found by the integration tests — it silently restarts at `CLM-000001` if the most recent claim number is not `CLM`-formatted, which would then violate the unique constraint. Pinned by a characterization test. A correctness bug, not a migration one: fix after, with a sequence. |
 | C6 | Dual write in `ClaimsController.Submit` | `SaveChanges` and `Publish` are separate transactions. Transactional outbox, phase 5. |
 | C7 | EF6 on non-Framework targets pulls `System.Drawing.Common` 4.7.0 | NuGet flags it as a **known critical vulnerability** (GHSA-rxg9-xrhp-64gj). Harmless while EF6 is only a transitional state, but it must not survive into production. Another reason B5 (EF Core) is not optional. |
 | C8 | `log4net` 2.0.15 flagged by NuGet audit | Known moderate severity vulnerability (GHSA-4f7c-pmjv-c25w). Independent of the migration - it wants upgrading regardless - but the migration is the natural moment to do it. |
