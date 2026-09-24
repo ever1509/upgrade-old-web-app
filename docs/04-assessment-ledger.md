@@ -209,6 +209,34 @@ with whoever owns the budget before the work starts, not after.
 `SkiaSharp` (MIT, Microsoft-maintained) is the alternative if the licence terms
 are ever a problem.
 
+### Remote authentication couples the new app to the old one on every request
+
+Slice 2b wires up the System.Web adapters so the ASP.NET Core app can identify
+the signed-in user: it calls the legacy app, which owns the Forms Auth cookie
+and the machine key that encrypts it, and turns the answer into a
+`ClaimsPrincipal`.
+
+That is what makes the strangler order possible at all. Authentication is the
+most dangerous thing to migrate (B9), and this lets every other page move
+first.
+
+The consequence is worth being explicit about: `UseAuthentication` resolves the
+user on **every** request, so once this is switched on, the new app cannot
+serve anything while the legacy app is down - not even a page it owns outright.
+Migrating pages therefore does not reduce the dependency on the legacy app at
+all. Only migrating authentication does.
+
+So "how much is migrated" and "can the old app be switched off" are different
+questions, and the second has one answer: not until B9 is done.
+
+Practical detail worth knowing before it costs an afternoon: the shared API key
+must be **exactly 32 hex characters** (a GUID without dashes). Anything else
+fails options validation - and because that runs inside the pipeline, *every*
+request returns 500, including endpoints that never touch authentication. It
+looks like a broken application rather than a bad setting. The status endpoint
+in the front door is therefore served *before* the authentication middleware,
+so diagnostics keep working when the thing being diagnosed is the legacy app.
+
 ### Security posture
 
 Two of the three vulnerability warnings NuGet raises against this solution come

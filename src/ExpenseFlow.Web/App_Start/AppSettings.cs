@@ -35,6 +35,19 @@ namespace ExpenseFlow.Web
             get { return Get("ExpenseFlow:UploadPath", "~/App_Data/uploads"); }
         }
 
+        /// <summary>
+        /// Shared secret the ASP.NET Core front door uses to ask who the current
+        /// user is. The adapters require exactly 32 hex characters - a GUID with
+        /// the dashes removed - and reject anything else at startup.
+        ///
+        /// A development value. In a real deployment this belongs in a secret
+        /// store, not in source control, and the two apps read it from there.
+        /// </summary>
+        public static string RemoteAppApiKey
+        {
+            get { return Get("ExpenseFlow:RemoteAppApiKey", "1f7eb6fc288e4bfea551cbb3d0c6fa7f"); }
+        }
+
         public static string InternalApiKey
         {
             get { return Get("ExpenseFlow:InternalApiKey", "local-dev-worker-key"); }

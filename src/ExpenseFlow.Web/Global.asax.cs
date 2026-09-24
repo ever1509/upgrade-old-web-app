@@ -5,6 +5,7 @@ using System.Web.Mvc;
 using System.Web.Optimization;
 using System.Web.Routing;
 using System.Web.Security;
+using Microsoft.AspNetCore.SystemWebAdapters;
 using System.Security.Principal;
 using System.Threading;
 using log4net;
@@ -27,6 +28,21 @@ namespace ExpenseFlow.Web
         protected void Application_Start()
         {
             XmlConfigurator.Configure();
+
+            // Remote authentication for the ASP.NET Core front door.
+            //
+            // This app owns the Forms Authentication cookie and the machine key
+            // that encrypts it, so it is the only process that can say who a
+            // request belongs to. The adapters expose that as an endpoint the
+            // new app calls, protected by a shared API key.
+            //
+            // It is a bridge, not a destination: it exists so pages can move
+            // across one at a time without auth having to move first. It is
+            // deleted with this app in phase 6.
+            SystemWebAdapterConfiguration.AddSystemWebAdapters(this)
+                .AddProxySupport(options => options.UseForwardedHeaders = true)
+                .AddRemoteAppServer(options => options.ApiKey = AppSettings.RemoteAppApiKey)
+                .AddAuthenticationServer();
 
             AreaRegistration.RegisterAllAreas();
             GlobalConfiguration.Configure(WebApiConfig.Register);
